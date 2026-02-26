@@ -19,6 +19,8 @@
  * - View-specific rendering logic
  */
 
+/* global CloudSyncModule */
+
 // ── Constants ───────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = "carrierHelperEntries";

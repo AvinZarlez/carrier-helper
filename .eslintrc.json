@@ -1,0 +1,23 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": "eslint:recommended",
+  "globals": {
+    "firebase": "readonly",
+    "module": "readonly"
+  },
+  "rules": {
+    "no-console": "off"
+  },
+  "overrides": [
+    {
+      "files": ["tests/**/*.js"],
+      "env": {
+        "jest": true,
+        "node": true
+      }
+    }
+  ]
+}

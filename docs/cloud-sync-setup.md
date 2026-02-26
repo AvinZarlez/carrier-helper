@@ -55,8 +55,8 @@ const firebaseConfig = {
 };
 ```
 
-6. Copy these values — you will need them in Step 6.
-7. Click **Continue to console**.
+1. Copy these values — you will need them in Step 6.
+2. Click **Continue to console**.
 
 > **Note:** Firebase API keys are **not secret**. They identify your project but all access is controlled by Authentication and Security Rules. It is safe to commit `js/firebase-config.js` with your real values.
 
@@ -90,7 +90,7 @@ The default production rules deny all access. Replace them with rules that allow
 1. In **Build → Firestore Database**, click the **Rules** tab.
 2. Replace the entire contents with the following:
 
-```
+```javascript
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -101,7 +101,7 @@ service cloud.firestore {
 }
 ```
 
-3. Click **Publish**.
+1. Click **Publish**.
 
 > **What this rule does:** A signed-in user can only read and write documents stored under their own user ID. No user can access another user's data.
 
@@ -161,7 +161,7 @@ Click the **Sign Out** button next to your email in the header. The app returns 
 
 All entries are stored in Firestore under the path:
 
-```
+```text
 users/{userId}/userData/entries
 ```
 
@@ -202,7 +202,7 @@ Yes. The app reads from and writes to localStorage first. If the cloud sync uplo
 Firebase's Spark (free) plan is sufficient for normal use. The relevant limits are:
 
 | Resource | Free quota |
-|---|---|
+| --- | --- |
 | Firestore reads | 50,000 / day |
 | Firestore writes | 20,000 / day |
 | Firestore storage | 1 GiB |

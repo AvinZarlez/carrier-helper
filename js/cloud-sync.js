@@ -34,6 +34,8 @@
  * - Non-Firebase related functionality
  */
 
+/* global firebaseConfig, loadEntries, saveEntries, render */
+
 // eslint-disable-next-line no-unused-vars
 const CloudSyncModule = (function () {
     let auth = null;

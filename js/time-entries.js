@@ -25,6 +25,9 @@
  * - Shared utilities (see common.js)
  */
 
+/* global loadEntries, saveEntries, getOpenEntry, clockOutEntry, createEntry */
+/* global formatDate, formatTime, formatDuration, renderDataViewer */
+
 // ── DOM References ──────────────────────────────────────────────────────────
 
 const clockBtn = document.getElementById("clock-btn");
@@ -186,6 +189,7 @@ function initTimeEntriesView() {
 }
 
 // Alias for backward compatibility with cloud-sync.js
+// eslint-disable-next-line no-unused-vars
 const render = renderTimeEntries;
 
 // ── Export for testing (Node.js environment) ───────────────────────────────

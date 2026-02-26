@@ -31,6 +31,8 @@
  * - Cloud sync logic (use cloud-sync.js)
  */
 
+/* global initTimeEntriesView */
+
 // ── Application Initialization ──────────────────────────────────────────────
 
 /**

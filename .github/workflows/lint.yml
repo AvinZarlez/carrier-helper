@@ -1,0 +1,49 @@
+# Lint Workflow for Carrier Helper
+#
+# This workflow runs ESLint (JavaScript) and markdownlint (Markdown) checks.
+#
+# Triggers:
+# - Pull requests to main branch (when relevant files change)
+# - Manual trigger via workflow_dispatch
+
+name: Lint
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'js/**'
+      - 'tests/**'
+      - 'docs/**'
+      - '*.md'
+      - 'package.json'
+      - '.eslintrc.json'
+      - '.markdownlint.json'
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint JavaScript
+        run: npm run lint:js
+
+      - name: Lint Markdown
+        run: npm run lint:md

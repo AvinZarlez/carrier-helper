@@ -18,7 +18,7 @@ To share data across devices, use [CSV export/import](#csv-exportimport) or enab
 
 ---
 
-## CSV Export / Import
+## CSV Export/Import
 
 The **Data Viewer** tab (click "Data Viewer" in the navigation at the top of the page) provides Export and Import buttons.
 
@@ -31,7 +31,7 @@ The **Data Viewer** tab (click "Data Viewer" in the navigation at the top of the
 The CSV contains the following columns:
 
 | Column | Description |
-|---|---|
+| --- | --- |
 | `id` | Unique identifier for the entry (UUID) |
 | `date` | Human-readable date (e.g. `Feb 26, 2026`) |
 | `clockIn` | ISO-8601 timestamp of clock-in |
@@ -96,7 +96,7 @@ Click **Sign Out** next to your email in the header. The app reverts to local-on
 ## Recommended Workflow
 
 | Goal | Action |
-|---|---|
+| --- | --- |
 | Back up my data | Data Viewer → Export All to CSV |
 | Move data to a new browser | Export on old browser → Import (Replace All) on new browser |
 | Combine data from two browsers | Export each → Import (Add to Existing) the second file on the first browser |

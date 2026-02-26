@@ -13,6 +13,7 @@ Carrier Helper uses [Jest](https://jestjs.io/) for unit testing with jsdom for b
 ### Test Coverage
 
 Current coverage focuses on the core utility functions in `js/common.js`:
+
 - Storage operations
 - Date/time formatting
 - CSV parsing and generation
@@ -59,6 +60,34 @@ Shows detailed output for each test case.
 
 ---
 
+## Running Linting Locally
+
+Linting checks that JavaScript and Markdown files follow consistent coding standards.
+
+### Lint All Files
+
+```bash
+npm run lint
+```
+
+### Lint JavaScript Only
+
+```bash
+npm run lint:js
+```
+
+Uses [ESLint](https://eslint.org/) with the configuration in `.eslintrc.json`.
+
+### Lint Markdown Only
+
+```bash
+npm run lint:md
+```
+
+Uses [markdownlint](https://github.com/DavidAnson/markdownlint) with the configuration in `.markdownlint.json`.
+
+---
+
 ## Running Tests in VSCode
 
 ### Option 1: Terminal
@@ -81,7 +110,7 @@ A launch configuration is included in `.vscode/launch.json`. Press `F5` or use t
 
 ## Test File Structure
 
-```
+```text
 tests/
 ├── setup.js           # Test environment setup (mocks localStorage, crypto)
 └── common.test.js     # Tests for js/common.js utilities
@@ -91,10 +120,13 @@ tests/
 
 1. Create a new file in `tests/` with the `.test.js` extension
 2. Import the functions you want to test:
+
    ```js
    const { functionName } = require('../js/filename.js');
    ```
+
 3. Write your tests using Jest's `describe` and `it` blocks:
+
    ```js
    describe('functionName', () => {
      it('should do something', () => {
@@ -107,12 +139,12 @@ tests/
 
 ## GitHub Actions CI
 
-Tests run automatically on pull requests that modify JavaScript files. See `.github/workflows/test.yml`.
+Tests and linting run automatically on pull requests. See `.github/workflows/test.yml` and `.github/workflows/lint.yml`.
 
 ### Workflow Triggers
 
-- **Pull requests** to `main` branch (when JS/test files change)
-- **Manual trigger** via Actions → Run Tests → Run workflow
+- **Pull requests** to `main` branch (when JS/test/doc files change)
+- **Manual trigger** via Actions → Run workflow
 
 ### Viewing Results
 
@@ -128,7 +160,7 @@ Tests run automatically on pull requests that modify JavaScript files. See `.git
 After running `npm test`, coverage reports are generated in:
 
 | Format | Location | Description |
-|--------|----------|-------------|
+| --- | --- | --- |
 | Text | Terminal output | Quick summary |
 | HTML | `coverage/lcov-report/index.html` | Interactive browser view |
 | LCOV | `coverage/lcov.info` | For CI tools |
@@ -153,7 +185,7 @@ start coverage/lcov-report/index.html
 The test environment mocks browser APIs not available in Node.js:
 
 | API | Mock Location | Notes |
-|-----|---------------|-------|
+| --- | --- | --- |
 | `localStorage` | `tests/setup.js` | In-memory storage, cleared between tests |
 | `crypto.randomUUID()` | `tests/setup.js` | Returns predictable test UUIDs |
 

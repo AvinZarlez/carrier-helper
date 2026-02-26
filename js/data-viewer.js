@@ -28,6 +28,9 @@
  * - Shared utilities (see common.js)
  */
 
+/* global loadEntries, saveEntries, mergeEntries, formatDate, formatTime */
+/* global formatDuration, parseCSV, generateCSV, renderTimeEntries */
+
 // ── DOM References ──────────────────────────────────────────────────────────
 
 // Tab navigation
