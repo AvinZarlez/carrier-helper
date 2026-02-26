@@ -648,9 +648,20 @@ function initHoursView() {
   hvDatePicker.addEventListener("change", () => {
     const val = hvDatePicker.value;
     if (!val) return;
-    if (hvPeriodType === "week" || hvPeriodType === "month") {
-      const parsed = new Date(val + (hvPeriodType === "week" ? "T00:00:00" : "-01T00:00:00"));
-      if (!isNaN(parsed.getTime())) hvCurrentDate = parsed;
+    if (hvPeriodType === "week") {
+      // val is "YYYY-MM-DD" — parse as local midnight to avoid UTC offset issues
+      const parts = val.split("-");
+      if (parts.length === 3) {
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 0, 0, 0, 0);
+        if (!isNaN(d.getTime())) hvCurrentDate = d;
+      }
+    } else if (hvPeriodType === "month") {
+      // val is "YYYY-MM"
+      const parts = val.split("-");
+      if (parts.length === 2) {
+        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, 1, 0, 0, 0, 0);
+        if (!isNaN(d.getTime())) hvCurrentDate = d;
+      }
     } else {
       const year = parseInt(val, 10);
       if (year >= 2000 && year <= 2099) {

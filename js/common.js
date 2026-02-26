@@ -530,6 +530,7 @@ function createEntry() {
 
 /**
  * Convert an ISO timestamp to a local date string (YYYY-MM-DD).
+ * The "en-CA" locale is used because it reliably produces the YYYY-MM-DD format.
  * @param {string} isoString - ISO-8601 timestamp
  * @returns {string} Date string in YYYY-MM-DD format (local time)
  */
