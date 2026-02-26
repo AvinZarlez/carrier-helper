@@ -613,3 +613,87 @@ tbody tr:hover {
 .btn-delete-all:hover {
   background: #9b2c2c;
 }
+
+/* ── Data viewer week navigation ── */
+.dv-week-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-nav-week {
+  background: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-nav-week:hover {
+  background: #cbd5e0;
+}
+
+.dv-week-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dv-week-label {
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.95rem;
+}
+
+.dv-jump-to-date {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.dv-jump-to-date input[type="date"] {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #2d3748;
+  outline: none;
+}
+
+.dv-jump-to-date input[type="date"]:focus {
+  border-color: #2b6cb0;
+}
+
+.btn-jump {
+  background: #2b6cb0;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.3rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-jump:hover {
+  background: #2c5282;
+}
+
+/* ── Date group header rows in data viewer ── */
+.date-group-header td {
+  background: #ebf4ff;
+  color: #2b6cb0;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  border-top: 2px solid #bee3f8;
+}

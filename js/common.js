@@ -41,10 +41,12 @@ function loadEntries() {
 
 /**
  * Save entries to localStorage and notify cloud sync if logged in.
+ * Entries are sorted by clockIn (oldest first) before saving.
  * @param {Array<{id: string, clockIn: string, clockOut: string|null}>} entries
  */
 function saveEntries(entries) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  const sorted = [...entries].sort((a, b) => new Date(a.clockIn) - new Date(b.clockIn));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted));
   if (typeof CloudSyncModule !== "undefined" && CloudSyncModule.isLoggedIn()) {
     CloudSyncModule.notifyDataChanged();
   }

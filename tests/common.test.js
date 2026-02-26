@@ -65,6 +65,24 @@ describe('Storage Operations', () => {
         JSON.stringify(testEntries)
       );
     });
+
+    it('should sort entries by clockIn before saving', () => {
+      const unsorted = [
+        { id: '2', clockIn: '2024-01-02T09:00:00.000Z', clockOut: null },
+        { id: '1', clockIn: '2024-01-01T09:00:00.000Z', clockOut: null }
+      ];
+      const sorted = [
+        { id: '1', clockIn: '2024-01-01T09:00:00.000Z', clockOut: null },
+        { id: '2', clockIn: '2024-01-02T09:00:00.000Z', clockOut: null }
+      ];
+
+      saveEntries(unsorted);
+
+      expect(localStorage.setItem).toHaveBeenCalledWith(
+        STORAGE_KEY,
+        JSON.stringify(sorted)
+      );
+    });
   });
 
   describe('getOpenEntry', () => {
