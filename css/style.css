@@ -597,3 +597,19 @@ tbody tr:hover {
   font-weight: 400;
   opacity: 0.85;
 }
+
+.btn-delete-all {
+  background: #c53030;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-delete-all:hover {
+  background: #9b2c2c;
+}
