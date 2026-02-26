@@ -1,8 +1,12 @@
 # Carrier Helper
 
-A simple web application designed to help mail carriers track their shifts and hours. Clock in and out with a single click, and view all your time entries in a clean spreadsheet-style interface — right in your browser, no account required.
+[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://avinzarlez.github.io/carrier-helper)
+[![Deploy to GitHub Pages](https://github.com/AvinZarlez/carrier-helper/actions/workflows/deploy.yml/badge.svg)](https://github.com/AvinZarlez/carrier-helper/actions/workflows/deploy.yml)
+[![Lint](https://github.com/AvinZarlez/carrier-helper/actions/workflows/lint.yml/badge.svg)](https://github.com/AvinZarlez/carrier-helper/actions/workflows/lint.yml)
+[![Run Tests](https://github.com/AvinZarlez/carrier-helper/actions/workflows/test.yml/badge.svg)](https://github.com/AvinZarlez/carrier-helper/actions/workflows/test.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-> **Live app:** [https://avinzarlez.github.io/carrier-helper](https://avinzarlez.github.io/carrier-helper)
+A simple web application designed to help mail carriers track their shifts and hours. Clock in and out with a single click, and view all your time entries in a clean spreadsheet-style interface — right in your browser, no account required.
 
 ## What It Does
 
