@@ -67,8 +67,9 @@ function getOpenEntry(entries) {
 /**
  * Return default USPS mail carrier pay scale metadata.
  *
- * Values are based on the NALC National Agreement for City Letter Carriers:
- * - Base rate: Grade 1, Step BB career carrier (~$23.49/hr as of 2024)
+ * Values are based on the NALC National Agreement for City Letter Carriers.
+ * Verify rates against the current agreement at nalc.org.
+ * - Base rate: Grade 1, Step BB career carrier (~$23.49/hr)
  * - Overtime: 1.5× base after 8 hrs/day or 40 hrs/week (per FLSA + NALC contract)
  * - Penalty overtime: 2× base after 10 hrs/day or 56 hrs/week
  * - Night differential: additional flat rate/hr for hours between 6 PM–6 AM
