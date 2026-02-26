@@ -1,0 +1,52 @@
+# Test Workflow for Carrier Helper
+#
+# This workflow runs unit tests with code coverage on pull requests.
+# It is optional and only runs when tests are present.
+#
+# Triggers:
+# - Pull requests to main branch (manual trigger available)
+# - Can be manually triggered via workflow_dispatch
+#
+# To enable automatic PR testing, change 'workflow_dispatch' to include 'pull_request'
+
+name: Run Tests
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'js/**'
+      - 'tests/**'
+      - 'package.json'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with coverage
+        run: npm test
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
