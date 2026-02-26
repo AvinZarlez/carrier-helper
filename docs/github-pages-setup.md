@@ -10,7 +10,7 @@ Carrier Helper is a static web application (plain HTML, CSS, and JavaScript). Th
 
 ### Repository Structure
 
-```
+```text
 carrier-helper/
 ├── index.html          # Main application page
 ├── css/
@@ -34,7 +34,8 @@ Every push to the `main` branch triggers the GitHub Actions workflow defined in 
 4. Deploys the artifact to GitHub Pages.
 
 The deployed URL follows the pattern:
-```
+
+```text
 https://<your-github-username>.github.io/<repository-name>/
 ```
 
@@ -70,7 +71,8 @@ You can watch the progress under **Actions → Deploy to GitHub Pages**.
 ### 4. Access Your Site
 
 Once the workflow completes successfully, your site will be live at:
-```
+
+```text
 https://<your-github-username>.github.io/carrier-helper/
 ```
 

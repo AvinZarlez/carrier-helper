@@ -5,7 +5,7 @@ This folder contains the technical documentation for the Carrier Helper web appl
 ## Documents
 
 | Document | Description |
-|---|---|
+| --- | --- |
 | [GitHub Pages Setup](github-pages-setup.md) | How the GitHub Pages deployment works and how to fork this repo to deploy your own copy |
 | [Data Management](data-management.md) | How to save, export, import, and back up your time-entry data |
 | [Cloud Sync Setup](cloud-sync-setup.md) | Step-by-step guide to connecting the app to Firebase for cross-device cloud sync |
@@ -14,7 +14,7 @@ This folder contains the technical documentation for the Carrier Helper web appl
 ## Developer Documentation
 
 | Document | Description |
-|---|---|
+| --- | --- |
 | [Copilot Instructions](../.github/copilot-instructions.md) | Agent documentation for GitHub Copilot - project structure, architecture, and guidelines |
 
 ---
@@ -22,12 +22,14 @@ This folder contains the technical documentation for the Carrier Helper web appl
 ## Code File Documentation
 
 Each JavaScript file contains a documentation header explaining:
+
 - What the file does
 - Its responsibilities
 - Dependencies on other files
 - What code should or should not be added to it
 
 See the top of each file in `js/` for detailed documentation:
+
 - `js/common.js` — Shared utilities
 - `js/time-entries.js` — Time Entries view
 - `js/data-viewer.js` — Data Viewer view
