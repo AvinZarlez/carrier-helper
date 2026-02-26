@@ -73,14 +73,38 @@
         <button id="clock-btn" class="btn btn-in">Clock In</button>
       </section>
 
-      <section class="entries-panel">
+      <!-- Current shift (in-progress entry) -->
+      <section class="entries-panel" id="current-shift-panel">
         <div class="entries-header">
-          <h2>Time Entries</h2>
+          <h2>Current Shift</h2>
+        </div>
+        <div class="table-wrapper">
+          <table id="current-shift-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Clock In</th>
+                <th>Clock Out</th>
+                <th>Duration</th>
+                <th>Notes</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="current-shift-body">
+            </tbody>
+          </table>
+          <p id="current-shift-empty-msg" class="empty-msg">Not currently clocked in.</p>
+        </div>
+      </section>
+
+      <!-- Recent completed shifts -->
+      <section class="entries-panel" id="previous-shifts-panel">
+        <div class="entries-header">
+          <h2>Previous Shifts</h2>
           <button id="clear-btn" class="btn btn-clear">Clear All</button>
         </div>
-
         <div class="table-wrapper">
-          <table id="entries-table">
+          <table id="previous-shifts-table">
             <thead>
               <tr>
                 <th>#</th>
@@ -93,10 +117,9 @@
               </tr>
             </thead>
             <tbody id="entries-body">
-              <!-- Rows injected by app.js -->
             </tbody>
           </table>
-          <p id="empty-msg" class="empty-msg">No entries yet. Press "Clock In" to start tracking.</p>
+          <p id="empty-msg" class="empty-msg">No recent shifts to show.</p>
         </div>
       </section>
     </div>
@@ -160,6 +183,12 @@
           </p>
           <!-- Hidden file input for import -->
           <input type="file" id="import-file-input" accept=".csv" style="display: none" />
+        </div>
+
+        <div class="data-mgmt-section">
+          <h3>Delete Local Data</h3>
+          <button id="delete-all-btn" class="btn btn-delete-all">🗑 Delete All Local Data</button>
+          <p class="mgmt-note">⚠️ Permanently deletes <strong>all</strong> locally stored time entries. This cannot be undone.</p>
         </div>
       </section>
     </div>

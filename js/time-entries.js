@@ -26,7 +26,7 @@
  */
 
 /* global loadEntries, saveEntries, getOpenEntry, clockOutEntry, createEntry */
-/* global formatDate, formatTime, formatDuration, renderDataViewer */
+/* global formatDate, formatTime, formatDuration, renderDataViewer, openEditModal */
 
 // ── DOM References ──────────────────────────────────────────────────────────
 
@@ -36,6 +36,8 @@ const currentTime = document.getElementById("current-time");
 const entriesBody = document.getElementById("entries-body");
 const emptyMsg = document.getElementById("empty-msg");
 const clearBtn = document.getElementById("clear-btn");
+const currentShiftBody = document.getElementById("current-shift-body");
+const currentShiftEmptyMsg = document.getElementById("current-shift-empty-msg");
 
 // ── Clock Logic ─────────────────────────────────────────────────────────────
 
@@ -62,8 +64,118 @@ function handleClockButton() {
 // ── Rendering ───────────────────────────────────────────────────────────────
 
 /**
- * Render the time entries table and update the clock button state.
- * This is the main render function for the Time Entries view.
+ * Return a local date string "YYYY-MM-DD" for comparison purposes.
+ * Uses the local timezone rather than UTC.
+ * @param {string} isoString - ISO-8601 timestamp
+ * @returns {string} Local date string
+ */
+function toLocalDateString(isoString) {
+  const d = new Date(isoString);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/**
+ * Build the HTML string for a row in the current-shift table (no row number).
+ * @param {Object} entry
+ * @returns {string} HTML table row
+ */
+function buildCurrentShiftRow(entry) {
+  const date = formatDate(entry.clockIn);
+  const clockIn = formatTime(entry.clockIn);
+  const clockOut = `<span class="pending-cell">In progress…</span>`;
+  const durCell = `<span class="pending-cell">—</span>`;
+  const notes = entry.notes
+    ? `<span class="notes-cell" title="${entry.notes.replace(/"/g, "&quot;")}">${entry.notes}</span>`
+    : `<span class="pending-cell">—</span>`;
+  return `
+    <tr data-id="${entry.id}">
+      <td>${date}</td>
+      <td>${clockIn}</td>
+      <td>${clockOut}</td>
+      <td>${durCell}</td>
+      <td>${notes}</td>
+      <td>
+        <button class="btn-edit" data-edit-id="${entry.id}" title="Edit entry">✏️</button>
+        <button class="btn-delete" data-delete-id="${entry.id}" title="Delete entry">🗑</button>
+      </td>
+    </tr>`;
+}
+
+/**
+ * Build the HTML string for a row in the previous-shifts table (includes row number).
+ * @param {Object} entry
+ * @param {number} rowNum - Display row number
+ * @returns {string} HTML table row
+ */
+function buildPreviousShiftRow(entry, rowNum) {
+  const date = formatDate(entry.clockIn);
+  const clockIn = formatTime(entry.clockIn);
+  const clockOut = entry.clockOut
+    ? formatTime(entry.clockOut)
+    : `<span class="pending-cell">In progress…</span>`;
+  const dur = formatDuration(entry.clockIn, entry.clockOut);
+  const durCell = dur
+    ? `<span class="duration-cell">${dur}</span>`
+    : `<span class="pending-cell">—</span>`;
+  const notes = entry.notes
+    ? `<span class="notes-cell" title="${entry.notes.replace(/"/g, "&quot;")}">${entry.notes}</span>`
+    : `<span class="pending-cell">—</span>`;
+  return `
+    <tr data-id="${entry.id}">
+      <td>${rowNum}</td>
+      <td>${date}</td>
+      <td>${clockIn}</td>
+      <td>${clockOut}</td>
+      <td>${durCell}</td>
+      <td>${notes}</td>
+      <td>
+        <button class="btn-edit" data-edit-id="${entry.id}" title="Edit entry">✏️</button>
+        <button class="btn-delete" data-delete-id="${entry.id}" title="Delete entry">🗑</button>
+      </td>
+    </tr>`;
+}
+
+/**
+ * Return the subset of entries to display in the "Previous Shifts" section.
+ * Includes all entries from the reference day (same calendar day as the
+ * in-progress entry, or today) plus all entries from the most recent prior
+ * day that has at least one entry.
+ * @param {Array} allEntries - All stored entries. Assumed sorted oldest-first,
+ *   which is guaranteed by `loadEntries()` / `saveEntries()` conventions.
+ * @param {Object|null} openEntry - The current in-progress entry, or null
+ * @returns {Array} Entries to display, sorted newest-first
+ */
+function getPreviousShiftsEntries(allEntries, openEntry) {
+  // Exclude the in-progress entry from this section
+  const completed = allEntries.filter((e) => e.clockOut !== null);
+
+  if (completed.length === 0) return [];
+
+  const refDate = openEntry ? toLocalDateString(openEntry.clockIn) : toLocalDateString(new Date().toISOString());
+
+  // Entries from the reference day
+  const refDayEntries = completed.filter((e) => toLocalDateString(e.clockIn) === refDate);
+
+  // Entries strictly before the reference day
+  const beforeRef = completed.filter((e) => toLocalDateString(e.clockIn) < refDate);
+
+  let prevDayEntries = [];
+  if (beforeRef.length > 0) {
+    // Most recent previous day
+    const prevDay = toLocalDateString(beforeRef[beforeRef.length - 1].clockIn);
+    prevDayEntries = beforeRef.filter((e) => toLocalDateString(e.clockIn) === prevDay);
+  }
+
+  // Combine and sort newest-first for display
+  return [...refDayEntries, ...prevDayEntries].reverse();
+}
+
+/**
+ * Render the time entries view and update the clock button state.
+ * Shows the current in-progress entry and recent previous shifts.
  */
 function renderTimeEntries() {
   const entries = loadEntries();
@@ -82,46 +194,27 @@ function renderTimeEntries() {
     statusValue.className = "status-out";
   }
 
-  // Build table rows (newest first)
-  const rows = [...entries].reverse();
+  // ── Current Shift ───────────────────────────────────────────────────────
+  if (open) {
+    currentShiftEmptyMsg.style.display = "none";
+    currentShiftBody.innerHTML = buildCurrentShiftRow(open);
+  } else {
+    currentShiftBody.innerHTML = "";
+    currentShiftEmptyMsg.style.display = "block";
+  }
 
-  if (rows.length === 0) {
+  // ── Previous Shifts ─────────────────────────────────────────────────────
+  const previous = getPreviousShiftsEntries(entries, open);
+
+  if (previous.length === 0) {
     entriesBody.innerHTML = "";
     emptyMsg.style.display = "block";
     return;
   }
 
   emptyMsg.style.display = "none";
-  entriesBody.innerHTML = rows
-    .map((entry, idx) => {
-      const rowNum = rows.length - idx;
-      const date = formatDate(entry.clockIn);
-      const clockIn = formatTime(entry.clockIn);
-      const clockOut = entry.clockOut
-        ? formatTime(entry.clockOut)
-        : `<span class="pending-cell">In progress…</span>`;
-      const dur = formatDuration(entry.clockIn, entry.clockOut);
-      const durCell = dur
-        ? `<span class="duration-cell">${dur}</span>`
-        : `<span class="pending-cell">—</span>`;
-      const notes = entry.notes
-        ? `<span class="notes-cell" title="${entry.notes.replace(/"/g, '&quot;')}">${entry.notes}</span>`
-        : `<span class="pending-cell">—</span>`;
-
-      return `
-      <tr data-id="${entry.id}">
-        <td>${rowNum}</td>
-        <td>${date}</td>
-        <td>${clockIn}</td>
-        <td>${clockOut}</td>
-        <td>${durCell}</td>
-        <td>${notes}</td>
-        <td>
-          <button class="btn-edit" data-edit-id="${entry.id}" title="Edit entry">✏️</button>
-          <button class="btn-delete" data-delete-id="${entry.id}" title="Delete entry">🗑</button>
-        </td>
-      </tr>`;
-    })
+  entriesBody.innerHTML = previous
+    .map((entry, idx) => buildPreviousShiftRow(entry, previous.length - idx))
     .join("");
 }
 
@@ -140,7 +233,7 @@ function tickClock() {
 
 // ── Event Handlers ──────────────────────────────────────────────────────────
 
-// Delete or edit individual entry
+// Delete or edit individual entry (previous shifts table)
 entriesBody.addEventListener("click", (event) => {
   const deleteBtn = event.target.closest("[data-delete-id]");
   if (deleteBtn) {
@@ -149,6 +242,27 @@ entriesBody.addEventListener("click", (event) => {
     saveEntries(loadEntries().filter((e) => e.id !== id));
     renderTimeEntries();
     // Also refresh Data Viewer if it's visible
+    if (typeof renderDataViewer === "function") {
+      renderDataViewer();
+    }
+    return;
+  }
+
+  const editBtn = event.target.closest("[data-edit-id]");
+  if (!editBtn) return;
+  if (typeof openEditModal === "function") {
+    openEditModal(editBtn.dataset.editId);
+  }
+});
+
+// Delete or edit the current shift entry
+currentShiftBody.addEventListener("click", (event) => {
+  const deleteBtn = event.target.closest("[data-delete-id]");
+  if (deleteBtn) {
+    if (!confirm("Delete this entry?")) return;
+    const id = deleteBtn.dataset.deleteId;
+    saveEntries(loadEntries().filter((e) => e.id !== id));
+    renderTimeEntries();
     if (typeof renderDataViewer === "function") {
       renderDataViewer();
     }
@@ -199,6 +313,8 @@ if (typeof module !== "undefined" && module.exports) {
     handleClockButton,
     renderTimeEntries,
     tickClock,
-    initTimeEntriesView
+    initTimeEntriesView,
+    toLocalDateString,
+    getPreviousShiftsEntries
   };
 }

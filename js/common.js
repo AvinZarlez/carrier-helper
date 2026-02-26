@@ -223,6 +223,59 @@ function validateEntry(entry) {
 }
 
 /**
+ * Validate that a time entry does not overlap with any other entries.
+ * An open entry (no clockOut) is treated as extending to the present/infinity.
+ * @param {Object} entry - The entry to check
+ * @param {Array} allEntries - All entries (may include the entry itself; it is excluded internally)
+ * @returns {boolean} true if no overlap is detected
+ */
+function validateNoOverlap(entry, allEntries) {
+  const others = allEntries.filter((e) => e.id !== entry.id);
+  const entryStart = new Date(entry.clockIn);
+  const entryEnd = entry.clockOut ? new Date(entry.clockOut) : null;
+
+  for (const other of others) {
+    const otherStart = new Date(other.clockIn);
+    const otherEnd = other.clockOut ? new Date(other.clockOut) : null;
+
+    // Overlap exists when each interval starts before the other ends.
+    // A null end means open-ended (extends forever).
+    // Strict inequality (<) is intentional: entries that merely touch at a
+    // boundary (e.g., one ends at 10:00, the next starts at 10:00) are
+    // considered adjacent, not overlapping.
+    const entryStartsBeforeOtherEnds = !otherEnd || entryStart < otherEnd;
+    const otherStartsBeforeEntryEnds = !entryEnd || otherStart < entryEnd;
+
+    if (entryStartsBeforeOtherEnds && otherStartsBeforeEntryEnds) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * Validate that there is at most one open (in-progress) entry, and if this
+ * entry is open it must be the chronologically last entry in the dataset.
+ * @param {Object} entry - The entry to check
+ * @param {Array} allEntries - All entries (may include the entry itself; it is excluded internally)
+ * @returns {boolean} true if the single-open constraint is satisfied
+ */
+function validateSingleOpenEntry(entry, allEntries) {
+  // If this entry has a clockOut it is complete; no constraint violated.
+  if (entry.clockOut) return true;
+
+  // Entry is open. There must be no other entries with a clockIn after this one.
+  const entryStart = new Date(entry.clockIn);
+  const others = allEntries.filter((e) => e.id !== entry.id);
+  for (const other of others) {
+    if (new Date(other.clockIn) > entryStart) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
  * Create a new entry with a unique ID and current timestamp.
  * @returns {Object} New entry object with clockIn set to now
  */
@@ -259,6 +312,8 @@ if (typeof module !== "undefined" && module.exports) {
     generateCSV,
     mergeEntries,
     validateEntry,
+    validateNoOverlap,
+    validateSingleOpenEntry,
     createEntry,
     clockOutEntry
   };

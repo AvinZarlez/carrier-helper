@@ -29,7 +29,8 @@
  */
 
 /* global loadEntries, saveEntries, mergeEntries, formatDate, formatTime */
-/* global formatDuration, parseCSV, generateCSV, renderTimeEntries */
+/* global formatDuration, parseCSV, generateCSV, renderTimeEntries, validateEntry */
+/* global validateNoOverlap, validateSingleOpenEntry */
 
 // ── DOM References ──────────────────────────────────────────────────────────
 
@@ -46,6 +47,7 @@ const exportBtn = document.getElementById("export-btn");
 const importAddBtn = document.getElementById("import-add-btn");
 const importReplaceBtn = document.getElementById("import-replace-btn");
 const importFileInput = document.getElementById("import-file-input");
+const deleteAllBtn = document.getElementById("delete-all-btn");
 
 // ── Tab Navigation ──────────────────────────────────────────────────────────
 
@@ -197,8 +199,23 @@ function saveEditEntry() {
     return;
   }
 
-  errorEl.style.display = "none";
   const entries = loadEntries();
+
+  if (!validateNoOverlap(updatedEntry, entries)) {
+    errorEl.textContent =
+      "Invalid entry: this entry's time range overlaps with an existing entry.";
+    errorEl.style.display = "block";
+    return;
+  }
+
+  if (!validateSingleOpenEntry(updatedEntry, entries)) {
+    errorEl.textContent =
+      "Invalid entry: an in-progress entry (no clock-out) must be the most recent entry. Remove or update newer entries first.";
+    errorEl.style.display = "block";
+    return;
+  }
+
+  errorEl.style.display = "none";
   const idx = entries.findIndex((e) => e.id === currentEditId);
   if (idx !== -1) {
     entries[idx] = updatedEntry;
@@ -231,6 +248,28 @@ function exportToCSV() {
 }
 
 exportBtn.addEventListener("click", exportToCSV);
+
+// ── Delete All Local Data ───────────────────────────────────────────────────
+
+deleteAllBtn.addEventListener("click", () => {
+  const count = loadEntries().length;
+  if (
+    !confirm(
+      `⚠️ Delete ALL ${count} local time entries? This cannot be undone.`
+    )
+  )
+    return;
+  // Second confirmation for safety
+  if (
+    !confirm(
+      "Are you sure? All local data will be permanently deleted."
+    )
+  )
+    return;
+  saveEntries([]);
+  renderDataViewer();
+  if (typeof renderTimeEntries === "function") renderTimeEntries();
+});
 
 // ── Import ──────────────────────────────────────────────────────────────────
 

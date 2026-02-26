@@ -21,6 +21,8 @@ const {
   generateCSV,
   mergeEntries,
   validateEntry,
+  validateNoOverlap,
+  validateSingleOpenEntry,
   createEntry,
   clockOutEntry
 } = require('../js/common.js');
@@ -365,6 +367,67 @@ describe('Entry Operations', () => {
       expect(entry.clockOut).toBeDefined();
       expect(entry.clockOut >= before).toBe(true);
       expect(entry.clockOut <= after).toBe(true);
+    });
+  });
+});
+
+describe('Cross-entry Validation', () => {
+  const A = { id: 'a', clockIn: '2024-01-01T09:00:00.000Z', clockOut: '2024-01-01T10:00:00.000Z' };
+  const B = { id: 'b', clockIn: '2024-01-01T10:00:00.000Z', clockOut: '2024-01-01T11:00:00.000Z' };
+  const C = { id: 'c', clockIn: '2024-01-01T09:30:00.000Z', clockOut: '2024-01-01T10:30:00.000Z' }; // overlaps A and B
+  const D = { id: 'd', clockIn: '2024-01-01T11:00:00.000Z', clockOut: null }; // open, after B
+  const E = { id: 'e', clockIn: '2024-01-01T09:00:00.000Z', clockOut: null }; // open, same start as A
+
+  describe('validateNoOverlap', () => {
+    it('should return true when there are no other entries', () => {
+      expect(validateNoOverlap(A, [A])).toBe(true);
+    });
+
+    it('should return true for adjacent (non-overlapping) entries', () => {
+      // A ends at 10:00, B starts at 10:00 — touching but not overlapping
+      expect(validateNoOverlap(A, [A, B])).toBe(true);
+      expect(validateNoOverlap(B, [A, B])).toBe(true);
+    });
+
+    it('should return false when entry overlaps another', () => {
+      expect(validateNoOverlap(C, [A, B, C])).toBe(false);
+    });
+
+    it('should return false when a new entry overlaps an open entry', () => {
+      // B (10:00–11:00) overlaps D which starts at 11:00 — touching, not overlapping
+      expect(validateNoOverlap(B, [A, B, D])).toBe(true);
+      // C (9:30–10:30) overlaps open E (starts 9:00, no end)
+      expect(validateNoOverlap(C, [E, C])).toBe(false);
+    });
+
+    it('should return false when two open entries exist', () => {
+      const open1 = { id: 'o1', clockIn: '2024-01-01T08:00:00.000Z', clockOut: null };
+      const open2 = { id: 'o2', clockIn: '2024-01-01T09:00:00.000Z', clockOut: null };
+      expect(validateNoOverlap(open2, [open1, open2])).toBe(false);
+    });
+
+    it('should return true for empty entries list', () => {
+      expect(validateNoOverlap(A, [])).toBe(true);
+    });
+  });
+
+  describe('validateSingleOpenEntry', () => {
+    it('should return true for a completed entry regardless of others', () => {
+      expect(validateSingleOpenEntry(A, [A, B, D])).toBe(true);
+    });
+
+    it('should return true when open entry is the last entry', () => {
+      expect(validateSingleOpenEntry(D, [A, B, D])).toBe(true);
+    });
+
+    it('should return false when open entry has newer entries after it', () => {
+      // E starts at 9:00, B starts at 10:00 — B is after E, so E cannot be open
+      expect(validateSingleOpenEntry(E, [A, B, E])).toBe(false);
+    });
+
+    it('should return true when open entry is the only entry', () => {
+      const open = { id: 'x', clockIn: '2024-01-01T09:00:00.000Z', clockOut: null };
+      expect(validateSingleOpenEntry(open, [open])).toBe(true);
     });
   });
 });
