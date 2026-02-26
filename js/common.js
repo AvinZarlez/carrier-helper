@@ -526,6 +526,183 @@ function createEntry() {
   };
 }
 
+// ── Hours / Pay Calculation Utilities ──────────────────────────────────────
+
+/**
+ * Convert an ISO timestamp to a local date string (YYYY-MM-DD).
+ * @param {string} isoString - ISO-8601 timestamp
+ * @returns {string} Date string in YYYY-MM-DD format (local time)
+ */
+function toLocalDateString(isoString) {
+  return new Date(isoString).toLocaleDateString("en-CA");
+}
+
+/**
+ * Get the duration of a completed shift in decimal hours.
+ * @param {Object} entry - Time entry with clockIn and clockOut
+ * @returns {number} Duration in hours (0 if clockOut is null/missing)
+ */
+function getShiftHours(entry) {
+  if (!entry.clockOut) return 0;
+  return (new Date(entry.clockOut) - new Date(entry.clockIn)) / 3600000;
+}
+
+/**
+ * Calculate how many hours of a shift fall within the night differential window.
+ * The window may wrap midnight (e.g., 18:00–06:00).
+ * @param {Object} entry - Time entry with clockIn and clockOut
+ * @param {Object} meta - Metadata with nightDiffStartTime and nightDiffEndTime
+ * @returns {number} Hours within the night differential window
+ */
+function calculateNightDiffHours(entry, meta) {
+  if (!entry.clockOut) return 0;
+  const shiftStart = new Date(entry.clockIn);
+  const shiftEnd = new Date(entry.clockOut);
+  const [nightStartH, nightStartM] = meta.nightDiffStartTime.split(":").map(Number);
+  const [nightEndH, nightEndM] = meta.nightDiffEndTime.split(":").map(Number);
+  const wraps = (nightStartH * 60 + nightStartM) > (nightEndH * 60 + nightEndM);
+
+  let totalNightMs = 0;
+  const startDay = new Date(shiftStart);
+  startDay.setHours(0, 0, 0, 0);
+
+  for (let day = new Date(startDay); day.getTime() <= shiftEnd.getTime(); day.setDate(day.getDate() + 1)) {
+    const y = day.getFullYear();
+    const mo = day.getMonth();
+    const d = day.getDate();
+
+    if (wraps) {
+      // Evening segment: [nightStart on day d, midnight of day d+1)
+      const seg1Start = new Date(y, mo, d, nightStartH, nightStartM, 0, 0);
+      const seg1End = new Date(y, mo, d + 1, 0, 0, 0, 0);
+      totalNightMs += Math.max(0, Math.min(shiftEnd, seg1End) - Math.max(shiftStart, seg1Start));
+      // Morning segment: [midnight on day d, nightEnd on day d)
+      const seg2Start = new Date(y, mo, d, 0, 0, 0, 0);
+      const seg2End = new Date(y, mo, d, nightEndH, nightEndM, 0, 0);
+      totalNightMs += Math.max(0, Math.min(shiftEnd, seg2End) - Math.max(shiftStart, seg2Start));
+    } else {
+      const segStart = new Date(y, mo, d, nightStartH, nightStartM, 0, 0);
+      const segEnd = new Date(y, mo, d, nightEndH, nightEndM, 0, 0);
+      totalNightMs += Math.max(0, Math.min(shiftEnd, segEnd) - Math.max(shiftStart, segStart));
+    }
+  }
+
+  return totalNightMs / 3600000;
+}
+
+/**
+ * Calculate how many hours of a shift fall on a Sunday (local time).
+ * @param {Object} entry - Time entry with clockIn and clockOut
+ * @returns {number} Hours on Sunday
+ */
+function calculateSundayHours(entry) {
+  if (!entry.clockOut) return 0;
+  const shiftStart = new Date(entry.clockIn);
+  const shiftEnd = new Date(entry.clockOut);
+  let totalSundayMs = 0;
+
+  const startDay = new Date(shiftStart);
+  startDay.setHours(0, 0, 0, 0);
+
+  for (let day = new Date(startDay); day.getTime() <= shiftEnd.getTime(); day.setDate(day.getDate() + 1)) {
+    if (day.getDay() === 0) { // Sunday = 0
+      const y = day.getFullYear();
+      const mo = day.getMonth();
+      const d = day.getDate();
+      const dayStart = new Date(y, mo, d, 0, 0, 0, 0);
+      const dayEnd = new Date(y, mo, d + 1, 0, 0, 0, 0);
+      totalSundayMs += Math.max(0, Math.min(shiftEnd, dayEnd) - Math.max(shiftStart, dayStart));
+    }
+  }
+
+  return totalSundayMs / 3600000;
+}
+
+/**
+ * Calculate a pay breakdown for a set of time entries.
+ * Applies daily and weekly overtime/penalty overtime thresholds.
+ * Open entries (without a clockOut) are excluded from calculations.
+ * @param {Array} entries - Time entries (typically one work week)
+ * @param {Object} meta - Metadata with pay rates and thresholds
+ * @returns {Object} Breakdown: baseHours, otHours, penaltyOTHours, nightDiffHours,
+ *   sundayHours, totalHours, basePay, otPay, penaltyOTPay, nightDiffPay,
+ *   sundayPremiumPay, estimatedPay
+ */
+function calculatePaySummary(entries, meta) {
+  const {
+    baseHourlyRate,
+    overtimeMultiplier,
+    penaltyOvertimeMultiplier,
+    nightDifferentialRate,
+    sundayPremiumPercent,
+    dailyOvertimeThresholdHours,
+    dailyPenaltyOTThresholdHours,
+    weeklyOvertimeThresholdHours,
+    weeklyPenaltyOTThresholdHours
+  } = meta;
+
+  // Group completed entries by local date
+  const dayMap = new Map();
+  entries.filter((e) => e.clockOut).forEach((entry) => {
+    const day = toLocalDateString(entry.clockIn);
+    if (!dayMap.has(day)) dayMap.set(day, []);
+    dayMap.get(day).push(entry);
+  });
+
+  let baseHours = 0;
+  let otHours = 0;
+  let penaltyOTHours = 0;
+  let nightDiffHours = 0;
+  let sundayHours = 0;
+
+  for (const dayEntries of dayMap.values()) {
+    const totalDayHours = dayEntries.reduce((sum, e) => sum + getShiftHours(e), 0);
+    baseHours += Math.min(totalDayHours, dailyOvertimeThresholdHours);
+    otHours += Math.max(0, Math.min(totalDayHours, dailyPenaltyOTThresholdHours) - dailyOvertimeThresholdHours);
+    penaltyOTHours += Math.max(0, totalDayHours - dailyPenaltyOTThresholdHours);
+    dayEntries.forEach((e) => {
+      nightDiffHours += calculateNightDiffHours(e, meta);
+      sundayHours += calculateSundayHours(e);
+    });
+  }
+
+  // Apply weekly OT adjustment: move excess base hours to OT
+  if (baseHours > weeklyOvertimeThresholdHours) {
+    const spillover = baseHours - weeklyOvertimeThresholdHours;
+    baseHours = weeklyOvertimeThresholdHours;
+    otHours += spillover;
+  }
+
+  // Apply weekly penalty OT adjustment: move excess OT hours to penalty OT
+  if (baseHours + otHours > weeklyPenaltyOTThresholdHours) {
+    const spillover = (baseHours + otHours) - weeklyPenaltyOTThresholdHours;
+    otHours -= spillover;
+    penaltyOTHours += spillover;
+  }
+
+  const totalHours = baseHours + otHours + penaltyOTHours;
+  const basePay = baseHours * baseHourlyRate;
+  const otPay = otHours * baseHourlyRate * overtimeMultiplier;
+  const penaltyOTPay = penaltyOTHours * baseHourlyRate * penaltyOvertimeMultiplier;
+  const nightDiffPay = nightDiffHours * nightDifferentialRate;
+  const sundayPremiumPay = sundayHours * baseHourlyRate * (sundayPremiumPercent / 100);
+
+  return {
+    totalHours,
+    baseHours,
+    otHours,
+    penaltyOTHours,
+    nightDiffHours,
+    sundayHours,
+    basePay,
+    otPay,
+    penaltyOTPay,
+    nightDiffPay,
+    sundayPremiumPay,
+    estimatedPay: basePay + otPay + penaltyOTPay + nightDiffPay + sundayPremiumPay
+  };
+}
+
 /**
  * Clock out an entry by setting its clockOut to now.
  * @param {Object} entry - The entry to clock out
@@ -564,6 +741,11 @@ if (typeof module !== "undefined" && module.exports) {
     filterEntriesByRange,
     getExportEntries,
     createEntry,
-    clockOutEntry
+    clockOutEntry,
+    toLocalDateString,
+    getShiftHours,
+    calculateNightDiffHours,
+    calculateSundayHours,
+    calculatePaySummary
   };
 }

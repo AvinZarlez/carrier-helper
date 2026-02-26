@@ -1190,3 +1190,154 @@ tbody tr:hover {
 .site-footer a:hover {
   text-decoration: underline;
 }
+
+/* ── Hours View ── */
+
+.hv-period-nav {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.hv-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.hv-nav-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hv-date-picker {
+  padding: 0.3rem 0.6rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #2d3748;
+  outline: none;
+}
+
+.hv-date-picker:focus {
+  border-color: #2b6cb0;
+}
+
+/* Summary cards grid */
+.hv-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.hv-summary-card {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.85rem 0.75rem;
+  text-align: center;
+}
+
+.hv-card-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #2d3748;
+  line-height: 1.2;
+}
+
+.hv-card-label {
+  font-size: 0.75rem;
+  color: #718096;
+  margin-top: 0.25rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.hv-card-total   { border-top: 3px solid #2b6cb0; }
+.hv-card-base    { border-top: 3px solid #276749; }
+.hv-card-ot      { border-top: 3px solid #c05621; }
+.hv-card-penalty { border-top: 3px solid #c53030; }
+.hv-card-night   { border-top: 3px solid #553c9a; }
+.hv-card-sunday  { border-top: 3px solid #b7791f; }
+.hv-card-pay     { border-top: 3px solid #276749; background: #f0fff4; }
+
+.hv-card-pay .hv-card-value {
+  color: #276749;
+}
+
+/* Hours View table */
+.hv-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hv-table th,
+.hv-table td {
+  padding: 0.55rem 0.7rem;
+  text-align: right;
+  font-size: 0.88rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.hv-table th:first-child,
+.hv-table td:first-child {
+  text-align: left;
+}
+
+.hv-table th:nth-child(2),
+.hv-table td:nth-child(2) {
+  text-align: left;
+}
+
+.hv-table th {
+  background: #f7fafc;
+  color: #4a5568;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.hv-row-empty td {
+  color: #a0aec0;
+}
+
+.hv-row-total td {
+  background: #ebf8ff;
+  border-top: 2px solid #bee3f8;
+}
+
+.hv-cell-wrap {
+  white-space: normal;
+  min-width: 130px;
+}
+
+@media (max-width: 600px) {
+  .hv-summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hv-table th,
+  .hv-table td {
+    padding: 0.45rem 0.4rem;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 400px) {
+  .hv-summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hv-card-value {
+    font-size: 1.1rem;
+  }
+}

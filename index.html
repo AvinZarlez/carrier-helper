@@ -13,6 +13,7 @@
 
     <nav class="view-nav">
       <button id="nav-time-entries" class="nav-btn active">Time Entries</button>
+      <button id="nav-hours-view"   class="nav-btn">Hours View</button>
       <button id="nav-data-viewer"  class="nav-btn">Data Viewer</button>
     </nav>
 
@@ -126,6 +127,41 @@
             </table>
             <p id="empty-msg" class="empty-msg">No recent shifts to show.</p>
           </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Hours View -->
+    <div id="hours-view" style="display: none">
+      <section class="entries-panel">
+        <div class="entries-header">
+          <h2>⏱️ Hours Summary</h2>
+        </div>
+
+        <!-- Period type selector -->
+        <nav class="hv-period-nav">
+          <button id="hv-period-week"  class="btn-sub-tab active">📅 Week</button>
+          <button id="hv-period-month" class="btn-sub-tab">📆 Month</button>
+          <button id="hv-period-year"  class="btn-sub-tab">📊 Year</button>
+        </nav>
+
+        <!-- Navigation row -->
+        <div class="hv-nav-row">
+          <button id="hv-prev-btn" class="btn-nav-week">‹ Prev</button>
+          <div class="hv-nav-center">
+            <span id="hv-period-label" class="dv-week-label"></span>
+            <input type="date" id="hv-date-picker" class="hv-date-picker" title="Jump to date" />
+          </div>
+          <button id="hv-next-btn" class="btn-nav-week">Next ›</button>
+        </div>
+
+        <!-- Summary cards -->
+        <div class="hv-summary-cards" id="hv-summary-cards"></div>
+
+        <!-- Breakdown table -->
+        <div class="table-wrapper">
+          <table class="hv-table" id="hv-table"></table>
+          <p id="hv-empty-msg" class="empty-msg" style="display:none">No entries for this period.</p>
         </div>
       </section>
     </div>
@@ -420,6 +456,7 @@
   <script src="js/time-entries.js"></script>
   <script src="js/data-viewer.js"></script>
   <script src="js/meta-data.js"></script>
+  <script src="js/hours-view.js"></script>
   <script src="js/app.js"></script>
   <!-- Firebase SDK (only active when firebase-config.js has a non-empty apiKey) -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>

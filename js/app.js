@@ -33,7 +33,7 @@
  * - Cloud sync logic (use cloud-sync.js)
  */
 
-/* global initTimeEntriesView */
+/* global initTimeEntriesView, initHoursView */
 
 // ── Application Initialization ──────────────────────────────────────────────
 
@@ -45,6 +45,11 @@ function initApp() {
   // Initialize the Time Entries view (primary view)
   if (typeof initTimeEntriesView === "function") {
     initTimeEntriesView();
+  }
+
+  // Initialize the Hours View
+  if (typeof initHoursView === "function") {
+    initHoursView();
   }
 
   // Log successful initialization
