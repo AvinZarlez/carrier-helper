@@ -30,8 +30,9 @@ Each JavaScript file contains a documentation header explaining:
 
 See the top of each file in `js/` for detailed documentation:
 
-- `js/common.js` — Shared utilities
+- `js/common.js` — Shared utilities (storage, formatting, CSV, pay calculations)
 - `js/time-entries.js` — Time Entries view
+- `js/hours-view.js` — Hours View (weekly/monthly/yearly summaries with pay breakdown)
 - `js/data-viewer.js` — Data Viewer view (sub-tabs, export, import)
 - `js/meta-data.js` — Meta Data view (USPS pay scale settings form)
 - `js/app.js` — Application bootstrap

@@ -12,7 +12,7 @@ Carrier Helper uses [Jest](https://jestjs.io/) for unit testing with jsdom for b
 
 ### Test Coverage
 
-Tests cover the core utility functions in `js/common.js` as well as export/import logic:
+Tests cover the core utility functions in `js/common.js` as well as export/import logic and pay calculations:
 
 - Storage operations (entries and metadata)
 - Date/time formatting
@@ -23,6 +23,7 @@ Tests cover the core utility functions in `js/common.js` as well as export/impor
 - Export filtering (`filterEntriesByRange`, `getExportEntries`) — including selection-aware and date-range-aware export
 - Import round-trips for all three CSV formats
 - Merge vs. replace import modes
+- Hours and pay calculations (`getShiftHours`, `calculateNightDiffHours`, `calculateSundayHours`, `calculatePaySummary`)
 
 ### Test Files
 
@@ -31,6 +32,7 @@ Tests cover the core utility functions in `js/common.js` as well as export/impor
 | `tests/common.test.js` | Core utilities in `js/common.js` (storage, formatting, CSV) |
 | `tests/meta-data.test.js` | Metadata utilities in `js/common.js` (defaults, storage, CSV, type detection) |
 | `tests/export-import.test.js` | Export filtering logic and import/export round-trips for all CSV formats |
+| `tests/hours-calc.test.js` | Hours and pay calculation utilities in `js/common.js` |
 
 ---
 
@@ -125,8 +127,11 @@ A launch configuration is included in `.vscode/launch.json`. Press `F5` or use t
 
 ```text
 tests/
-├── setup.js           # Test environment setup (mocks localStorage, crypto)
-└── common.test.js     # Tests for js/common.js utilities
+├── setup.js               # Test environment setup (mocks localStorage, crypto)
+├── common.test.js         # Tests for js/common.js utilities (storage, formatting, CSV)
+├── meta-data.test.js      # Tests for js/common.js metadata utilities
+├── export-import.test.js  # Tests for export filtering and import/export round-trips
+└── hours-calc.test.js     # Tests for js/common.js hours/pay calculation utilities
 ```
 
 ### Adding New Tests
