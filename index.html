@@ -197,73 +197,6 @@
           <p id="dv-empty-msg" class="empty-msg">No entries yet.</p>
         </div>
       </section>
-
-      <section class="entries-panel" id="data-mgmt-panel">
-        <div class="entries-header">
-          <h2>Data Management</h2>
-          <button class="btn-collapse collapsed" id="data-mgmt-toggle" aria-expanded="false" title="Collapse section">▼</button>
-        </div>
-        <div class="panel-body collapsed" id="data-mgmt-body">
-          <div class="data-mgmt-sections">
-            <div class="data-mgmt-section">
-              <h3>Export Data</h3>
-              <div class="export-buttons">
-                <button id="export-btn" class="btn btn-export">📥 Export Current View to CSV</button>
-                <button id="export-all-btn" class="btn btn-export">📦 Export ALL Data to CSV</button>
-                <button id="export-range-btn" class="btn btn-export-range">📅 Export Date Range to CSV</button>
-              </div>
-              <div class="export-range-form" id="export-range-form" style="display:none">
-                <div class="export-range-inputs">
-                  <label>From: <input type="date" id="export-range-start" /></label>
-                  <span class="dv-range-sep">–</span>
-                  <label>To: <input type="date" id="export-range-end" /></label>
-                </div>
-                <div class="export-range-actions">
-                  <button id="export-range-confirm-btn" class="btn-jump">📥 Export</button>
-                  <button id="export-range-cancel-btn" class="btn-secondary-sm">Cancel</button>
-                </div>
-              </div>
-              <p class="mgmt-note">
-                <strong>Export Current View:</strong> Downloads the data for the active sub-tab (Time Entries or Meta Data).<br>
-                <strong>Export ALL Data:</strong> Downloads both time entries and meta data in a single file.
-              </p>
-            </div>
-
-            <div class="data-mgmt-section">
-              <h3>Import Data</h3>
-              <div class="import-buttons">
-                <button id="import-add-btn" class="btn btn-import-add">
-                  <span class="btn-icon">➕</span>
-                  <span class="btn-text">
-                    <strong>Add to Existing</strong>
-                    <small>Merge with current data</small>
-                  </span>
-                </button>
-                <button id="import-replace-btn" class="btn btn-import-replace">
-                  <span class="btn-icon">🔄</span>
-                  <span class="btn-text">
-                    <strong>Replace All</strong>
-                    <small>Delete &amp; replace all data</small>
-                  </span>
-                </button>
-              </div>
-              <p class="mgmt-note">
-                Automatically detects data type (time entries, meta data, or both).<br>
-                <strong>Add to Existing:</strong> Merges the CSV with your current data (duplicates skipped).<br>
-                <strong>Replace All:</strong> ⚠️ Permanently deletes matching data and replaces with the CSV file.
-              </p>
-              <!-- Hidden file input for import -->
-              <input type="file" id="import-file-input" accept=".csv" style="display: none" />
-            </div>
-
-            <div class="data-mgmt-section">
-              <h3>Delete Local Data</h3>
-              <button id="delete-all-btn" class="btn btn-delete-all">🗑 Delete All Local Data</button>
-              <p class="mgmt-note">⚠️ Permanently deletes <strong>all</strong> locally stored time entries. This cannot be undone.</p>
-            </div>
-          </div>
-        </div>
-      </section>
       </div><!-- /dv-time-entries-sub -->
 
       <!-- Meta Data sub-view -->
@@ -368,6 +301,77 @@
           </div>
         </section>
       </div><!-- /dv-meta-data-sub -->
+
+      <!-- Data Management (always visible regardless of active sub-tab) -->
+      <section class="entries-panel" id="data-mgmt-panel">
+        <div class="entries-header">
+          <h2>Data Management</h2>
+          <button class="btn-collapse collapsed" id="data-mgmt-toggle" aria-expanded="false" title="Collapse section">▼</button>
+        </div>
+        <div class="panel-body collapsed" id="data-mgmt-body">
+          <div class="data-mgmt-sections">
+            <div class="data-mgmt-section">
+              <h3>Export Data</h3>
+              <div class="export-buttons">
+                <button id="export-btn" class="btn btn-export">📥 Export Time Entries to CSV</button>
+                <button id="export-metadata-btn" class="btn btn-export">📋 Export Meta Data to CSV</button>
+                <button id="export-all-btn" class="btn btn-export">📦 Export ALL Data to CSV</button>
+                <button id="export-range-btn" class="btn btn-export-range">📅 Export Date Range to CSV</button>
+              </div>
+              <div class="export-range-form" id="export-range-form" style="display:none">
+                <div class="export-range-inputs">
+                  <label>From: <input type="date" id="export-range-start" /></label>
+                  <span class="dv-range-sep">–</span>
+                  <label>To: <input type="date" id="export-range-end" /></label>
+                </div>
+                <div class="export-range-actions">
+                  <button id="export-range-confirm-btn" class="btn-jump">📥 Export</button>
+                  <button id="export-range-cancel-btn" class="btn-secondary-sm">Cancel</button>
+                </div>
+              </div>
+              <p class="mgmt-note">
+                <strong>Export Time Entries:</strong> Downloads the entries shown in the current date view. If entries are selected, only those are exported.<br>
+                <strong>Export Meta Data:</strong> Downloads your USPS pay scale settings.<br>
+                <strong>Export ALL Data:</strong> Downloads all time entries and meta data in a single file.<br>
+                <strong>Export Date Range:</strong> Downloads time entries between two dates you specify.
+              </p>
+            </div>
+
+            <div class="data-mgmt-section">
+              <h3>Import Data</h3>
+              <div class="import-buttons">
+                <button id="import-add-btn" class="btn btn-import-add">
+                  <span class="btn-icon">➕</span>
+                  <span class="btn-text">
+                    <strong>Add to Existing</strong>
+                    <small>Merge with current data</small>
+                  </span>
+                </button>
+                <button id="import-replace-btn" class="btn btn-import-replace">
+                  <span class="btn-icon">🔄</span>
+                  <span class="btn-text">
+                    <strong>Replace All</strong>
+                    <small>Delete &amp; replace all data</small>
+                  </span>
+                </button>
+              </div>
+              <p class="mgmt-note">
+                Automatically detects data type (time entries, meta data, or both).<br>
+                <strong>Add to Existing:</strong> Merges the CSV with your current data (duplicates skipped).<br>
+                <strong>Replace All:</strong> ⚠️ Permanently deletes matching data and replaces with the CSV file.
+              </p>
+              <!-- Hidden file input for import -->
+              <input type="file" id="import-file-input" accept=".csv" style="display: none" />
+            </div>
+
+            <div class="data-mgmt-section">
+              <h3>Delete Local Data</h3>
+              <button id="delete-all-btn" class="btn btn-delete-all">🗑 Delete All Local Data</button>
+              <p class="mgmt-note">⚠️ Permanently deletes <strong>all</strong> locally stored time entries. This cannot be undone.</p>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </main>
 

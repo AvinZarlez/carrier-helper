@@ -484,6 +484,39 @@ function validateSingleOpenEntry(entry, allEntries) {
  * Create a new entry with a unique ID and current timestamp.
  * @returns {Object} New entry object with clockIn set to now
  */
+/**
+ * Filter entries to those whose clockIn falls within a date range.
+ * @param {Array} entries - Time entries array
+ * @param {Date} viewStart - Start of range (inclusive)
+ * @param {Date} viewEnd - End of range
+ * @param {boolean} [exclusiveEnd=false] - When true, the end bound is exclusive (d < viewEnd)
+ * @returns {Array} Filtered entries
+ */
+function filterEntriesByRange(entries, viewStart, viewEnd, exclusiveEnd) {
+  return entries.filter((e) => {
+    const d = new Date(e.clockIn);
+    return exclusiveEnd ? (d >= viewStart && d < viewEnd) : (d >= viewStart && d <= viewEnd);
+  });
+}
+
+/**
+ * Get entries to export: if any entries are selected, return only those;
+ * otherwise return all entries within the view date range.
+ * @param {Array} entries - All time entries
+ * @param {Set|Array|null} selectedIds - Selected entry IDs (Set, array, or null/empty)
+ * @param {Date} viewStart - Start of view range (inclusive)
+ * @param {Date} viewEnd - End of view range
+ * @param {boolean} [exclusiveEnd=false] - Whether the end bound is exclusive
+ * @returns {Array} Entries to export
+ */
+function getExportEntries(entries, selectedIds, viewStart, viewEnd, exclusiveEnd) {
+  const idSet = selectedIds instanceof Set ? selectedIds : new Set(selectedIds || []);
+  if (idSet.size > 0) {
+    return entries.filter((e) => idSet.has(e.id));
+  }
+  return filterEntriesByRange(entries, viewStart, viewEnd, exclusiveEnd);
+}
+
 function createEntry() {
   return {
     id: crypto.randomUUID(),
@@ -528,6 +561,8 @@ if (typeof module !== "undefined" && module.exports) {
     validateEntry,
     validateNoOverlap,
     validateSingleOpenEntry,
+    filterEntriesByRange,
+    getExportEntries,
     createEntry,
     clockOutEntry
   };
