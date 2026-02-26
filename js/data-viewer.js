@@ -80,6 +80,7 @@ const dvRangeLabel = document.getElementById("dv-range-label");
 // Multi-select elements
 const dvSelectionBanner = document.getElementById("dv-selection-banner");
 const dvSelectionCount = document.getElementById("dv-selection-count");
+const dvDownloadSelectedBtn = document.getElementById("dv-download-selected-btn");
 const dvDeleteSelectedBtn = document.getElementById("dv-delete-selected-btn");
 const dvDeselectAllBtn = document.getElementById("dv-deselect-all-btn");
 const dvSelectAllBtn = document.getElementById("dv-select-all-btn");
@@ -676,6 +677,7 @@ dvSelectAllBtn.addEventListener("click", () => {
   updateSelectionBanner();
 });
 
+dvDownloadSelectedBtn.addEventListener("click", exportToCSV);
 dvDeleteSelectedBtn.addEventListener("click", deleteSelected);
 dvDeselectAllBtn.addEventListener("click", clearSelection);
 

@@ -984,6 +984,22 @@ tbody tr:hover {
   flex-wrap: wrap;
 }
 
+.btn-selection-download {
+  background: #276749;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-selection-download:hover {
+  background: #1e4e37;
+}
+
 .btn-selection-delete {
   background: #c53030;
   color: #fff;
