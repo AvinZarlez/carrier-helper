@@ -146,6 +146,37 @@ main {
   color: #c53030;
 }
 
+.btn-edit {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a0aec0;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.btn-edit:hover {
+  color: #2b6cb0;
+}
+
+.notes-cell {
+  display: inline-block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+  color: #4a5568;
+}
+
+.edit-textarea {
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
 /* ── Entries panel ── */
 .entries-panel {
   background: #fff;

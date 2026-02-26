@@ -20,6 +20,7 @@ const {
   splitCSVLine,
   generateCSV,
   mergeEntries,
+  validateEntry,
   createEntry,
   clockOutEntry
 } = require('../js/common.js');
@@ -203,18 +204,19 @@ describe('CSV Utilities', () => {
   describe('generateCSV', () => {
     it('should generate header-only CSV for empty entries', () => {
       const csv = generateCSV([]);
-      expect(csv).toBe('"id","date","clockIn","clockOut","duration"');
+      expect(csv).toBe('"id","date","clockIn","clockOut","duration","notes"');
     });
 
     it('should generate valid CSV with entries', () => {
       const entries = [
-        { id: 'test-id', clockIn: '2024-01-01T09:00:00.000Z', clockOut: '2024-01-01T17:00:00.000Z' }
+        { id: 'test-id', clockIn: '2024-01-01T09:00:00.000Z', clockOut: '2024-01-01T17:00:00.000Z', notes: 'test note' }
       ];
       
       const csv = generateCSV(entries);
       expect(csv).toContain('"test-id"');
       expect(csv).toContain('"2024-01-01T09:00:00.000Z"');
       expect(csv).toContain('"08:00:00"');
+      expect(csv).toContain('"test note"');
     });
 
     it('should escape quotes in values', () => {
@@ -273,6 +275,57 @@ describe('Entry Operations', () => {
     });
   });
 
+  describe('validateEntry', () => {
+    it('should return true for a valid complete entry', () => {
+      const entry = { id: 'abc', clockIn: '2024-01-01T09:00:00.000Z', clockOut: '2024-01-01T17:00:00.000Z', notes: 'ok' };
+      expect(validateEntry(entry)).toBe(true);
+    });
+
+    it('should return true for a valid open entry (null clockOut)', () => {
+      const entry = { id: 'abc', clockIn: '2024-01-01T09:00:00.000Z', clockOut: null };
+      expect(validateEntry(entry)).toBe(true);
+    });
+
+    it('should return true when notes is absent', () => {
+      const entry = { id: 'abc', clockIn: '2024-01-01T09:00:00.000Z', clockOut: null };
+      expect(validateEntry(entry)).toBe(true);
+    });
+
+    it('should return false when id is missing', () => {
+      const entry = { id: '', clockIn: '2024-01-01T09:00:00.000Z', clockOut: null };
+      expect(validateEntry(entry)).toBe(false);
+    });
+
+    it('should return false when clockIn is invalid', () => {
+      const entry = { id: 'abc', clockIn: 'not-a-date', clockOut: null };
+      expect(validateEntry(entry)).toBe(false);
+    });
+
+    it('should return false when clockOut is before clockIn', () => {
+      const entry = { id: 'abc', clockIn: '2024-01-01T17:00:00.000Z', clockOut: '2024-01-01T09:00:00.000Z' };
+      expect(validateEntry(entry)).toBe(false);
+    });
+
+    it('should return false when clockOut equals clockIn', () => {
+      const entry = { id: 'abc', clockIn: '2024-01-01T09:00:00.000Z', clockOut: '2024-01-01T09:00:00.000Z' };
+      expect(validateEntry(entry)).toBe(false);
+    });
+
+    it('should return false when clockOut is invalid', () => {
+      const entry = { id: 'abc', clockIn: '2024-01-01T09:00:00.000Z', clockOut: 'bad-date' };
+      expect(validateEntry(entry)).toBe(false);
+    });
+
+    it('should return false when notes is not a string', () => {
+      const entry = { id: 'abc', clockIn: '2024-01-01T09:00:00.000Z', clockOut: null, notes: 123 };
+      expect(validateEntry(entry)).toBe(false);
+    });
+
+    it('should return false for null input', () => {
+      expect(validateEntry(null)).toBe(false);
+    });
+  });
+
   describe('createEntry', () => {
     it('should create entry with unique id', () => {
       const entry = createEntry();
@@ -293,6 +346,11 @@ describe('Entry Operations', () => {
     it('should create entry with null clockOut', () => {
       const entry = createEntry();
       expect(entry.clockOut).toBeNull();
+    });
+
+    it('should create entry with empty notes', () => {
+      const entry = createEntry();
+      expect(entry.notes).toBe('');
     });
   });
 

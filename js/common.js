@@ -116,6 +116,7 @@ function parseCSV(text) {
   const idIdx = headers.indexOf("id");
   const clockInIdx = headers.indexOf("clockin");
   const clockOutIdx = headers.indexOf("clockout");
+  const notesIdx = headers.indexOf("notes");
 
   if (idIdx === -1 || clockInIdx === -1) return null; // Unrecognized format
 
@@ -125,8 +126,9 @@ function parseCSV(text) {
     const id = cols[idIdx] || "";
     const clockIn = cols[clockInIdx] || "";
     const clockOut = cols[clockOutIdx] || null;
+    const notes = notesIdx !== -1 ? (cols[notesIdx] || "") : "";
     if (!id || !clockIn) continue;
-    entries.push({ id, clockIn, clockOut: clockOut || null });
+    entries.push({ id, clockIn, clockOut: clockOut || null, notes });
   }
   return entries;
 }
@@ -166,13 +168,14 @@ function splitCSVLine(line) {
  * @returns {string} CSV string
  */
 function generateCSV(entries) {
-  const header = ["id", "date", "clockIn", "clockOut", "duration"];
+  const header = ["id", "date", "clockIn", "clockOut", "duration", "notes"];
   const rows = entries.map((e) => [
     e.id,
     formatDate(e.clockIn),
     e.clockIn || "",
     e.clockOut || "",
-    formatDuration(e.clockIn, e.clockOut) || ""
+    formatDuration(e.clockIn, e.clockOut) || "",
+    e.notes || ""
   ]);
 
   return [header, ...rows]
@@ -199,6 +202,25 @@ function mergeEntries(existing, incoming) {
 }
 
 /**
+ * Validate a time entry object.
+ * Checks that required fields are present and have sensible values.
+ * @param {Object} entry
+ * @returns {boolean} true if the entry is valid
+ */
+function validateEntry(entry) {
+  if (!entry || typeof entry.id !== "string" || !entry.id) return false;
+  const clockInDate = new Date(entry.clockIn);
+  if (!entry.clockIn || isNaN(clockInDate.getTime())) return false;
+  if (entry.notes !== undefined && typeof entry.notes !== "string") return false;
+  if (entry.clockOut) {
+    const clockOutDate = new Date(entry.clockOut);
+    if (isNaN(clockOutDate.getTime())) return false;
+    if (clockOutDate <= clockInDate) return false;
+  }
+  return true;
+}
+
+/**
  * Create a new entry with a unique ID and current timestamp.
  * @returns {Object} New entry object with clockIn set to now
  */
@@ -206,7 +228,8 @@ function createEntry() {
   return {
     id: crypto.randomUUID(),
     clockIn: new Date().toISOString(),
-    clockOut: null
+    clockOut: null,
+    notes: ""
   };
 }
 
@@ -233,6 +256,7 @@ if (typeof module !== "undefined" && module.exports) {
     splitCSVLine,
     generateCSV,
     mergeEntries,
+    validateEntry,
     createEntry,
     clockOutEntry
   };

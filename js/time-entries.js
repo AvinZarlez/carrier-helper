@@ -101,6 +101,9 @@ function renderTimeEntries() {
       const durCell = dur
         ? `<span class="duration-cell">${dur}</span>`
         : `<span class="pending-cell">—</span>`;
+      const notes = entry.notes
+        ? `<span class="notes-cell" title="${entry.notes.replace(/"/g, '&quot;')}">${entry.notes}</span>`
+        : `<span class="pending-cell">—</span>`;
 
       return `
       <tr data-id="${entry.id}">
@@ -109,7 +112,9 @@ function renderTimeEntries() {
         <td>${clockIn}</td>
         <td>${clockOut}</td>
         <td>${durCell}</td>
+        <td>${notes}</td>
         <td>
+          <button class="btn-edit" data-edit-id="${entry.id}" title="Edit entry">✏️</button>
           <button class="btn-delete" data-delete-id="${entry.id}" title="Delete entry">🗑</button>
         </td>
       </tr>`;
@@ -132,17 +137,25 @@ function tickClock() {
 
 // ── Event Handlers ──────────────────────────────────────────────────────────
 
-// Delete individual entry
+// Delete or edit individual entry
 entriesBody.addEventListener("click", (event) => {
-  const btn = event.target.closest("[data-delete-id]");
-  if (!btn) return;
-  if (!confirm("Delete this entry?")) return;
-  const id = btn.dataset.deleteId;
-  saveEntries(loadEntries().filter((e) => e.id !== id));
-  renderTimeEntries();
-  // Also refresh Data Viewer if it's visible
-  if (typeof renderDataViewer === "function") {
-    renderDataViewer();
+  const deleteBtn = event.target.closest("[data-delete-id]");
+  if (deleteBtn) {
+    if (!confirm("Delete this entry?")) return;
+    const id = deleteBtn.dataset.deleteId;
+    saveEntries(loadEntries().filter((e) => e.id !== id));
+    renderTimeEntries();
+    // Also refresh Data Viewer if it's visible
+    if (typeof renderDataViewer === "function") {
+      renderDataViewer();
+    }
+    return;
+  }
+
+  const editBtn = event.target.closest("[data-edit-id]");
+  if (!editBtn) return;
+  if (typeof openEditModal === "function") {
+    openEditModal(editBtn.dataset.editId);
   }
 });
 
