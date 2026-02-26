@@ -73,27 +73,29 @@
         <button id="clock-btn" class="btn btn-in">Clock In</button>
       </section>
 
-      <!-- Current shift (in-progress entry) -->
+      <!-- Current shift (in-progress) or Last Shift (most recent completed) -->
       <section class="entries-panel" id="current-shift-panel">
         <div class="entries-header">
-          <h2>Current Shift</h2>
+          <h2 id="current-shift-title">Current Shift</h2>
+          <button class="btn-collapse" id="current-shift-toggle" aria-expanded="true" title="Collapse section">▼</button>
         </div>
-        <div class="table-wrapper">
-          <table id="current-shift-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Clock In</th>
-                <th>Clock Out</th>
-                <th>Duration</th>
-                <th>Notes</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="current-shift-body">
-            </tbody>
-          </table>
-          <p id="current-shift-empty-msg" class="empty-msg">Not currently clocked in.</p>
+        <div class="panel-body" id="current-shift-body-wrapper">
+          <div class="table-wrapper">
+            <table id="current-shift-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Clock In</th>
+                  <th>Clock Out</th>
+                  <th>Duration</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="current-shift-body">
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -101,25 +103,30 @@
       <section class="entries-panel" id="previous-shifts-panel">
         <div class="entries-header">
           <h2>Previous Shifts</h2>
-          <button id="clear-btn" class="btn btn-clear">Clear All</button>
+          <div class="entries-header-actions">
+            <button id="clear-btn" class="btn btn-clear">Clear All</button>
+            <button class="btn-collapse" id="previous-shifts-toggle" aria-expanded="true" title="Collapse section">▼</button>
+          </div>
         </div>
-        <div class="table-wrapper">
-          <table id="previous-shifts-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Date</th>
-                <th>Clock In</th>
-                <th>Clock Out</th>
-                <th>Duration</th>
-                <th>Notes</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="entries-body">
-            </tbody>
-          </table>
-          <p id="empty-msg" class="empty-msg">No recent shifts to show.</p>
+        <div class="panel-body" id="previous-shifts-body-wrapper">
+          <div class="table-wrapper">
+            <table id="previous-shifts-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Date</th>
+                  <th>Clock In</th>
+                  <th>Clock Out</th>
+                  <th>Duration</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="entries-body">
+              </tbody>
+            </table>
+            <p id="empty-msg" class="empty-msg">No recent shifts to show.</p>
+          </div>
         </div>
       </section>
     </div>
