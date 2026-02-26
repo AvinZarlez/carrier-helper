@@ -33,15 +33,17 @@
 /* global validateNoOverlap, validateSingleOpenEntry */
 /* global loadMetaData, saveMetaData, generateMetaDataCSV, parseMetaDataCSV */
 /* global detectCSVType, generateAllDataCSV, parseAllDataCSV, renderMetaDataForm */
-/* global getExportEntries */
+/* global getExportEntries, renderHoursView */
 
 // ── DOM References ──────────────────────────────────────────────────────────
 
 // Tab navigation
 const navTimeEntries = document.getElementById("nav-time-entries");
 const navDataViewer = document.getElementById("nav-data-viewer");
+const navHoursView = document.getElementById("nav-hours-view");
 const timeEntriesView = document.getElementById("time-entries-view");
 const dataViewerView = document.getElementById("data-viewer-view");
+const hoursView = document.getElementById("hours-view");
 
 // Data Viewer elements
 const dvBody = document.getElementById("dv-body");
@@ -275,24 +277,37 @@ function deleteSelected() {
 function showTab(tab) {
   if (tab === "data-viewer") {
     timeEntriesView.style.display = "none";
+    hoursView.style.display = "none";
     dataViewerView.style.display = "block";
     navTimeEntries.classList.remove("active");
+    navHoursView.classList.remove("active");
     navDataViewer.classList.add("active");
     if (activeSubTab === "meta-data") {
       if (typeof renderMetaDataForm === "function") renderMetaDataForm();
     } else {
       renderDataViewer();
     }
+  } else if (tab === "hours-view") {
+    timeEntriesView.style.display = "none";
+    dataViewerView.style.display = "none";
+    hoursView.style.display = "block";
+    navTimeEntries.classList.remove("active");
+    navDataViewer.classList.remove("active");
+    navHoursView.classList.add("active");
+    if (typeof renderHoursView === "function") renderHoursView();
   } else {
     dataViewerView.style.display = "none";
+    hoursView.style.display = "none";
     timeEntriesView.style.display = "block";
     navDataViewer.classList.remove("active");
+    navHoursView.classList.remove("active");
     navTimeEntries.classList.add("active");
   }
 }
 
 navTimeEntries.addEventListener("click", () => showTab("time-entries"));
 navDataViewer.addEventListener("click", () => showTab("data-viewer"));
+navHoursView.addEventListener("click", () => showTab("hours-view"));
 
 // ── Data Viewer Sub-tab Navigation ──────────────────────────────────────────
 

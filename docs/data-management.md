@@ -108,7 +108,7 @@ The **Meta Data** sub-tab (within the Data Viewer) lets you configure your USPS 
 | Weekly Penalty OT Threshold | Hours/week before penalty OT kicks in | 56 hrs |
 | Night Start / End Time | Window for night differential pay | 6:00 PM – 6:00 AM |
 
-Metadata is synced to the cloud alongside time entries when Cloud Sync is enabled.
+These values are used by the **Hours View** to calculate estimated pay breakdowns (base, overtime, penalty overtime, night differential, and Sunday premium). Metadata is synced to the cloud alongside time entries when Cloud Sync is enabled.
 
 ---
 

@@ -10,6 +10,7 @@ Carrier Helper is a web application for tracking mail carrier work shifts. It al
 
 - **Clock In/Out** — Track work shifts with one-click clock in/out
 - **Time Entries** — View all recorded shifts with timestamps and duration
+- **Hours View** — Calendar summary of hours worked per week, month, and year with pay breakdown
 - **Data Viewer** — Read-only spreadsheet view of all entries
 - **CSV Export/Import** — Backup and restore data as CSV files
 - **Cloud Sync** — Optional Firebase-based sync across devices (opt-in)
@@ -29,8 +30,9 @@ carrier-helper/
 ├── css/
 │   └── style.css           # All application styles
 ├── js/
-│   ├── common.js           # Shared utilities (storage, formatting, CSV, metadata)
+│   ├── common.js           # Shared utilities (storage, formatting, CSV, metadata, pay calculations)
 │   ├── time-entries.js     # Time Entries view logic
+│   ├── hours-view.js       # Hours View logic (weekly/monthly/yearly summaries, pay breakdown)
 │   ├── data-viewer.js      # Data Viewer view logic (sub-tabs, export, import)
 │   ├── meta-data.js        # Meta Data view logic (USPS pay scale settings form)
 │   ├── app.js              # Application bootstrap
@@ -40,7 +42,8 @@ carrier-helper/
 │   ├── setup.js            # Jest test setup
 │   ├── common.test.js      # Tests for common.js core utilities
 │   ├── meta-data.test.js   # Tests for common.js metadata utilities
-│   └── export-import.test.js # Tests for export filtering and import/export round-trips
+│   ├── export-import.test.js # Tests for export filtering and import/export round-trips
+│   └── hours-calc.test.js  # Tests for common.js hours/pay calculation utilities
 ├── docs/
 │   ├── README.md           # Documentation index
 │   ├── github-pages-setup.md
@@ -65,17 +68,19 @@ carrier-helper/
 2. `js/time-entries.js` — Time Entries view
 3. `js/data-viewer.js` — Data Viewer view
 4. `js/meta-data.js` — Meta Data view
-5. `js/app.js` — Application initialization
-6. Firebase SDK (external CDN)
-7. `js/firebase-config.js` — Firebase configuration
-8. `js/cloud-sync.js` — Cloud sync module
+5. `js/hours-view.js` — Hours View
+6. `js/app.js` — Application initialization
+7. Firebase SDK (external CDN)
+8. `js/firebase-config.js` — Firebase configuration
+9. `js/cloud-sync.js` — Cloud sync module
 
 ### Module Responsibilities
 
 | File | Responsibility |
 |------|----------------|
-| `common.js` | Storage, formatting, CSV utilities, metadata utilities (no DOM) |
+| `common.js` | Storage, formatting, CSV utilities, metadata utilities, hours/pay calculations (no DOM) |
 | `time-entries.js` | Clock panel, entries table, delete/clear |
+| `hours-view.js` | Hours View: week/month/year summaries, pay breakdown cards, period navigation |
 | `data-viewer.js` | Sub-tabs, data table, export, import, tab navigation |
 | `meta-data.js` | Meta Data form rendering, save/reset, status messages |
 | `app.js` | Bootstrap and initialization |
@@ -96,6 +101,11 @@ carrier-helper/
 - `detectCSVType(text)` — Detect "entries", "metadata", "all", or "unknown"
 - `filterEntriesByRange(entries, start, end, exclusiveEnd)` — Filter by date range
 - `getExportEntries(entries, selectedIds, start, end, exclusiveEnd)` — Selection-aware export filter
+- `toLocalDateString(isoString)` — ISO timestamp → YYYY-MM-DD in local time
+- `getShiftHours(entry)` — Shift duration in decimal hours
+- `calculateNightDiffHours(entry, meta)` — Hours within the night differential window
+- `calculateSundayHours(entry)` — Hours worked on Sunday
+- `calculatePaySummary(entries, meta)` — Full pay breakdown (base, OT, penalty OT, night diff, Sunday premium)
 
 #### time-entries.js
 - `handleClockButton()` — Clock in/out logic
@@ -103,9 +113,19 @@ carrier-helper/
 - `getLastShiftEntry()` — Get the most recent completed entry
 - `getPreviousShiftsEntries()` — Get entries for the Previous Shifts section
 
+#### hours-view.js
+- `renderHoursView()` — Render the Hours View for the current period type and date
+- `initHoursView()` — Attach all event listeners (called once on startup)
+- `hvSetPeriodType(type)` — Switch between "week", "month", "year" period modes
+- `buildWeekTableHtml(allEntries, weekStart, meta)` — Per-day breakdown table for a week
+- `buildMonthTableHtml(allEntries, year, month, meta)` — Per-week breakdown table for a month
+- `buildYearTableHtml(allEntries, year, meta)` — Per-month breakdown table for a year
+- `hvFormatHours(hours)` — Format decimal hours as "H:MM"
+- `hvFormatMoney(value)` — Format a dollar amount as "$1,234.56"
+
 #### data-viewer.js
 - `renderDataViewer()` — Render read-only table for current view (week or range)
-- `showTab(tab)` — Switch between main views
+- `showTab(tab)` — Switch between main views ("time-entries", "hours-view", "data-viewer")
 - `showSubTab(subTab)` — Switch between Time Entries and Meta Data sub-tabs
 - `exportToCSV()` — Export current-view time entries (selection-aware)
 - `exportMetaDataToCSV()` — Export metadata as CSV
@@ -176,7 +196,7 @@ describe('functionName', () => {
 
 ### Documentation Requirements
 
-**ALWAYS keep documentation up to date when making changes:**
+**ALWAYS keep documentation up to date when making changes. This is a required step before any PR is complete:**
 
 1. Update relevant docs in `docs/` if changing user-facing behavior
 2. Update `README.md` when features are added, removed, or moved
@@ -184,8 +204,12 @@ describe('functionName', () => {
    - File structure
    - Module responsibilities
    - Key functions
+   - Script load order
    - Development guidelines
 4. Update JSDoc comments in code files
+
+> **This is mandatory, not optional.** Every PR that adds, removes, or changes a feature or file
+> must include corresponding documentation updates before it is considered done.
 
 ### Mobile & Responsive Design
 
