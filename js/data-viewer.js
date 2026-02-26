@@ -56,6 +56,13 @@ const dvWeekLabel = document.getElementById("dv-week-label");
 const dvDateJump = document.getElementById("dv-date-jump");
 const dvDateJumpBtn = document.getElementById("dv-date-jump-btn");
 
+// Multi-select elements
+const dvSelectionBanner = document.getElementById("dv-selection-banner");
+const dvSelectionCount = document.getElementById("dv-selection-count");
+const dvDeleteSelectedBtn = document.getElementById("dv-delete-selected-btn");
+const dvDeselectAllBtn = document.getElementById("dv-deselect-all-btn");
+const dvSelectAllBtn = document.getElementById("dv-select-all-btn");
+
 // ── Week Navigation Helpers ─────────────────────────────────────────────────
 
 /**
@@ -100,6 +107,79 @@ function dvToLocalDateString(isoString) {
 
 /** The Monday of the currently-displayed week. */
 let currentWeekStart = getWeekStart(new Date());
+
+// ── Multi-select State ──────────────────────────────────────────────────────
+
+/** Set of currently selected entry IDs. */
+const selectedEntryIds = new Set();
+
+/**
+ * Update the fixed selection banner to reflect the current selection.
+ */
+function updateSelectionBanner() {
+  if (selectedEntryIds.size === 0) {
+    dvSelectionBanner.style.display = "none";
+  } else {
+    dvSelectionBanner.style.display = "flex";
+    const n = selectedEntryIds.size;
+    dvSelectionCount.textContent = `${n} entr${n === 1 ? "y" : "ies"} selected`;
+  }
+}
+
+/**
+ * Sync the indeterminate/checked state of each day-group checkbox based on
+ * which row checkboxes within that date are checked.
+ */
+function updateDayCheckboxStates() {
+  dvBody.querySelectorAll(".dv-day-checkbox").forEach((dayCheckbox) => {
+    const date = dayCheckbox.dataset.date;
+    const rowCbs = Array.from(
+      dvBody.querySelectorAll(`.dv-row-checkbox[data-date="${date}"]`)
+    );
+    const checkedCount = rowCbs.filter((cb) => cb.checked).length;
+    if (checkedCount === 0) {
+      dayCheckbox.checked = false;
+      dayCheckbox.indeterminate = false;
+    } else if (checkedCount === rowCbs.length) {
+      dayCheckbox.checked = true;
+      dayCheckbox.indeterminate = false;
+    } else {
+      dayCheckbox.checked = false;
+      dayCheckbox.indeterminate = true;
+    }
+  });
+}
+
+/**
+ * Deselect all entries, uncheck all checkboxes, and hide the banner.
+ */
+function clearSelection() {
+  selectedEntryIds.clear();
+  dvBody.querySelectorAll(".dv-row-checkbox").forEach((cb) => {
+    cb.checked = false;
+    cb.closest("tr").classList.remove("dv-row-selected");
+  });
+  updateDayCheckboxStates();
+  updateSelectionBanner();
+}
+
+/**
+ * Delete all currently selected entries after confirmation.
+ */
+function deleteSelected() {
+  const count = selectedEntryIds.size;
+  if (
+    !confirm(
+      `Delete ${count} selected entr${count === 1 ? "y" : "ies"}? This cannot be undone.`
+    )
+  )
+    return;
+  const idsToDelete = new Set(selectedEntryIds);
+  selectedEntryIds.clear();
+  saveEntries(loadEntries().filter((e) => !idsToDelete.has(e.id)));
+  renderDataViewer();
+  if (typeof renderTimeEntries === "function") renderTimeEntries();
+}
 
 // ── Tab Navigation ──────────────────────────────────────────────────────────
 
@@ -160,7 +240,8 @@ function renderDataViewer() {
 
   if (weekEntries.length === 0) {
     dvBody.innerHTML =
-      `<tr><td colspan="7" class="empty-msg" style="padding:2rem 0;">No entries for this week.</td></tr>`;
+      `<tr><td colspan="8" class="empty-msg" style="padding:2rem 0;">No entries for this week.</td></tr>`;
+    updateSelectionBanner();
     return;
   }
 
@@ -183,9 +264,14 @@ function renderDataViewer() {
       let html = "";
       if (entryDateStr !== lastDate) {
         lastDate = entryDateStr;
-        html += `<tr class="date-group-header"><td colspan="7">${date}</td></tr>`;
+        html += `<tr class="date-group-header">
+          <td><input type="checkbox" class="dv-day-checkbox" data-date="${entryDateStr}" /></td>
+          <td colspan="7">${date}</td>
+        </tr>`;
       }
-      html += `<tr>
+      const isSelected = selectedEntryIds.has(entry.id);
+      html += `<tr${isSelected ? ' class="dv-row-selected"' : ''}>
+      <td><input type="checkbox" class="dv-row-checkbox" data-id="${entry.id}" data-date="${entryDateStr}"${isSelected ? " checked" : ""} /></td>
       <td>${rowNum}</td>
       <td>${date}</td>
       <td>${clockIn}</td>
@@ -200,15 +286,53 @@ function renderDataViewer() {
       return html;
     })
     .join("");
+
+  // Sync day-checkbox states and banner after re-render
+  updateDayCheckboxStates();
+  updateSelectionBanner();
 }
 
 // ── Data Viewer Row Actions ─────────────────────────────────────────────────
 
 dvBody.addEventListener("click", (event) => {
+  // Row checkbox — toggle selection
+  const rowCheckbox = event.target.closest(".dv-row-checkbox");
+  if (rowCheckbox) {
+    const id = rowCheckbox.dataset.id;
+    if (rowCheckbox.checked) {
+      selectedEntryIds.add(id);
+    } else {
+      selectedEntryIds.delete(id);
+    }
+    rowCheckbox.closest("tr").classList.toggle("dv-row-selected", rowCheckbox.checked);
+    updateDayCheckboxStates();
+    updateSelectionBanner();
+    return;
+  }
+
+  // Day-group checkbox — select/deselect all entries for that date
+  const dayCheckbox = event.target.closest(".dv-day-checkbox");
+  if (dayCheckbox) {
+    const date = dayCheckbox.dataset.date;
+    const rowCbs = dvBody.querySelectorAll(`.dv-row-checkbox[data-date="${date}"]`);
+    rowCbs.forEach((cb) => {
+      cb.checked = dayCheckbox.checked;
+      if (dayCheckbox.checked) {
+        selectedEntryIds.add(cb.dataset.id);
+      } else {
+        selectedEntryIds.delete(cb.dataset.id);
+      }
+      cb.closest("tr").classList.toggle("dv-row-selected", dayCheckbox.checked);
+    });
+    updateSelectionBanner();
+    return;
+  }
+
   const deleteBtn = event.target.closest("[data-delete-id]");
   if (deleteBtn) {
     if (!confirm("Delete this entry?")) return;
     const id = deleteBtn.dataset.deleteId;
+    selectedEntryIds.delete(id);
     saveEntries(loadEntries().filter((e) => e.id !== id));
     renderDataViewer();
     if (typeof renderTimeEntries === "function") renderTimeEntries();
@@ -316,6 +440,7 @@ function saveEditEntry() {
 // ── Week Navigation Event Handlers ─────────────────────────────────────────
 
 dvPrevWeekBtn.addEventListener("click", () => {
+  selectedEntryIds.clear();
   const d = new Date(currentWeekStart);
   d.setDate(d.getDate() - 7);
   currentWeekStart = d;
@@ -323,6 +448,7 @@ dvPrevWeekBtn.addEventListener("click", () => {
 });
 
 dvNextWeekBtn.addEventListener("click", () => {
+  selectedEntryIds.clear();
   const d = new Date(currentWeekStart);
   d.setDate(d.getDate() + 7);
   currentWeekStart = d;
@@ -336,6 +462,7 @@ function jumpToDate() {
   // relying on string concatenation to avoid timezone ambiguity.
   const [y, mo, dy] = val.split("-").map(Number);
   const d = new Date(y, mo - 1, dy, 12, 0, 0);
+  selectedEntryIds.clear();
   currentWeekStart = getWeekStart(d);
   renderDataViewer();
 }
@@ -344,6 +471,21 @@ dvDateJumpBtn.addEventListener("click", jumpToDate);
 dvDateJump.addEventListener("keydown", (e) => {
   if (e.key === "Enter") jumpToDate();
 });
+
+// ── Multi-select Button Handlers ────────────────────────────────────────────
+
+dvSelectAllBtn.addEventListener("click", () => {
+  dvBody.querySelectorAll(".dv-row-checkbox").forEach((cb) => {
+    cb.checked = true;
+    selectedEntryIds.add(cb.dataset.id);
+    cb.closest("tr").classList.add("dv-row-selected");
+  });
+  updateDayCheckboxStates();
+  updateSelectionBanner();
+});
+
+dvDeleteSelectedBtn.addEventListener("click", deleteSelected);
+dvDeselectAllBtn.addEventListener("click", clearSelection);
 
 // ── Export ──────────────────────────────────────────────────────────────────
 
@@ -462,6 +604,9 @@ if (typeof module !== "undefined" && module.exports) {
     isoToDatetimeLocal,
     getWeekStart,
     formatWeekLabel,
-    dvToLocalDateString
+    dvToLocalDateString,
+    clearSelection,
+    deleteSelected,
+    updateSelectionBanner
   };
 }

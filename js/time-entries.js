@@ -9,7 +9,6 @@
  * - Live clock display
  * - Time entries table rendering
  * - Individual entry deletion
- * - Clear all entries
  *
  * DEPENDENCIES:
  * - common.js (must be loaded first for shared utilities)
@@ -35,7 +34,6 @@ const statusValue = document.getElementById("status-value");
 const currentTime = document.getElementById("current-time");
 const entriesBody = document.getElementById("entries-body");
 const emptyMsg = document.getElementById("empty-msg");
-const clearBtn = document.getElementById("clear-btn");
 const currentShiftBody = document.getElementById("current-shift-body");
 const currentShiftPanel = document.getElementById("current-shift-panel");
 const currentShiftTitle = document.getElementById("current-shift-title");
@@ -323,17 +321,6 @@ currentShiftBody.addEventListener("click", (event) => {
   if (!editBtn) return;
   if (typeof openEditModal === "function") {
     openEditModal(editBtn.dataset.editId);
-  }
-});
-
-// Clear all entries
-clearBtn.addEventListener("click", () => {
-  if (!confirm("Clear all time entries? This cannot be undone.")) return;
-  saveEntries([]);
-  renderTimeEntries();
-  // Also refresh Data Viewer if it's visible
-  if (typeof renderDataViewer === "function") {
-    renderDataViewer();
   }
 });
 
