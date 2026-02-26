@@ -2,17 +2,18 @@
 
 [← Back to Documentation Hub](README.md)
 
-This guide explains all the ways you can save, load, back up, and share your Carrier Helper time-entry data.
+This guide explains all the ways you can save, load, back up, and share your Carrier Helper data
+(time entries and pay-scale metadata).
 
 ---
 
 ## Where Data Is Stored
 
-By default, Carrier Helper stores all time entries in your **browser's localStorage**. This means:
+By default, Carrier Helper stores all data in your **browser's localStorage**. This means:
 
 - Data persists across page refreshes and browser restarts on the same device.
 - Data is **not** shared between different browsers or devices automatically.
-- Clearing your browser's cache / site data will erase the entries.
+- Clearing your browser's cache / site data will erase the data.
 
 To share data across devices, use [CSV export/import](#csv-exportimport) or enable [Cloud Sync](cloud-sync-setup.md).
 
@@ -20,13 +21,21 @@ To share data across devices, use [CSV export/import](#csv-exportimport) or enab
 
 ## CSV Export/Import
 
-The **Data Viewer** tab (click "Data Viewer" in the navigation at the top of the page) provides Export and Import buttons.
+The **Data Viewer** tab (click "Data Viewer" in the navigation at the top of the page) provides
+Export and Import buttons in the **Data Management** section at the bottom. The Data Management
+section is always visible regardless of whether you have the Time Entries or Meta Data sub-tab active.
 
-### Exporting to CSV
+### Exporting Data
 
-1. Click the **Data Viewer** tab in the navigation bar.
-2. Click **📥 Export All to CSV**.
-3. Your browser downloads a file named `carrier-helper-YYYY-MM-DD.csv`.
+Three dedicated export buttons are available:
+
+#### 📥 Export Time Entries to CSV
+
+Downloads the time entries currently shown in the date viewer.
+
+- If you have **selected** specific rows (using the checkboxes), only those selected entries are exported.
+- If **nothing is selected**, all entries visible in the current date view (week or custom range) are exported.
+- Entries **outside** the current date view are never included.
 
 The CSV contains the following columns:
 
@@ -39,28 +48,67 @@ The CSV contains the following columns:
 | `duration` | Formatted duration `HH:MM:SS` (empty if still in progress) |
 | `notes` | Optional notes attached to the entry |
 
-Keep this file as a backup or use it to transfer data to another browser or device.
+#### 📋 Export Meta Data to CSV
+
+Downloads your USPS pay scale settings (base rate, overtime multipliers, thresholds, etc.)
+as a key/value CSV file.
+
+#### 📦 Export ALL Data to CSV
+
+Downloads **all** time entries (not filtered by the current view) together with all metadata
+in a single combined CSV file. Use this for full backups.
+
+#### 📅 Export Date Range to CSV
+
+Lets you specify a custom start and end date and downloads only the time entries that fall
+within that range.
 
 ---
 
 ### Importing from CSV
 
-Two import options are available:
+Two import options are available. The import automatically detects the CSV type
+(time entries, metadata, or combined) — it works from either sub-tab.
 
 #### ➕ Add to Existing (Merge)
 
-- Click **Add to Existing** in the Data Viewer.
+- Click **Add to Existing** in the Data Management section.
 - Choose a previously exported CSV file.
-- Entries from the file are merged with your current data. Any entry whose `id` already exists locally is skipped (no duplicates).
+- **Time entries CSV:** entries from the file are merged with your current data. Any entry whose `id` already exists locally is skipped (no duplicates).
+- **Metadata CSV:** incoming values are merged over your current settings.
+- **Combined CSV:** both entries and metadata are merged as above.
 - **Use this when** you want to combine data from two different browsers, or restore entries you accidentally deleted.
 
 #### 🔄 Replace All
 
-- Click **Replace All** in the Data Viewer.
+- Click **Replace All** in the Data Management section.
 - Choose a CSV file.
-- **All current entries are permanently deleted** and replaced with the entries from the file.
+- **Time entries CSV:** all current entries are permanently deleted and replaced with those from the file.
+- **Metadata CSV:** all current metadata settings are replaced with those from the file.
+- **Combined CSV:** both entries and metadata are fully replaced.
 - You will be asked to confirm before any data is changed.
-- **Use this when** you want to restore a backup or move your data to a fresh browser.
+- **Use this when** you want to restore a full backup.
+
+---
+
+## Meta Data — USPS Pay Scale Settings
+
+The **Meta Data** sub-tab (within the Data Viewer) lets you configure your USPS pay scale:
+
+| Field | Description | Default |
+| --- | --- | --- |
+| Base Hourly Rate | Your regular hourly wage | $23.49 (Grade 1, Step BB) |
+| Night Differential | Extra pay per hour for night work | $1.08/hr |
+| Overtime Rate | Multiplier applied after OT thresholds | 1.5× |
+| Penalty OT Rate | Multiplier for penalty overtime | 2.0× |
+| Sunday Premium | Additional % of base rate for Sunday hours | 25% |
+| Daily OT Threshold | Hours/day before overtime kicks in | 8 hrs |
+| Daily Penalty OT Threshold | Hours/day before penalty OT kicks in | 10 hrs |
+| Weekly OT Threshold | Hours/week before overtime kicks in | 40 hrs |
+| Weekly Penalty OT Threshold | Hours/week before penalty OT kicks in | 56 hrs |
+| Night Start / End Time | Window for night differential pay | 6:00 PM – 6:00 AM |
+
+Metadata is synced to the cloud alongside time entries when Cloud Sync is enabled.
 
 ---
 
@@ -73,18 +121,11 @@ For automatic, real-time synchronisation across all your devices, you can enable
 1. See [cloud-sync-setup.md](cloud-sync-setup.md) for the one-time Firebase project setup.
 2. Once configured, click **☁️ Sign In to Sync** in the page header.
 3. Create an account with your email and a password (min. 6 characters).
-4. After signing in, every data change is uploaded automatically and the **☁️ Synced** badge appears.
-
-### Signing In on a New Device
-
-1. Open Carrier Helper on the new device.
-2. Click **☁️ Sign In to Sync**.
-3. Enter the same email and password you used when creating your account.
-4. Click **Sign In** — your full entry history loads automatically.
+4. After signing in, every data change (entries and metadata) is uploaded automatically and the **☁️ Synced** badge appears.
 
 ### How Sync Works
 
-- Every clock-in, clock-out, deletion, clear, and import triggers an upload to Firestore.
+- Every clock-in, clock-out, metadata save, deletion, clear, and import triggers an upload to Firestore.
 - If another signed-in device makes a change, it appears in your browser in real time without needing to refresh.
 - If you are offline, your data is saved to localStorage as normal. The next successful cloud operation will upload everything.
 
@@ -98,8 +139,10 @@ Click **Sign Out** next to your email in the header. The app reverts to local-on
 
 | Goal | Action |
 | --- | --- |
-| Back up my data | Data Viewer → Export All to CSV |
-| Move data to a new browser | Export on old browser → Import (Replace All) on new browser |
+| Back up all data | Data Management → Export ALL Data to CSV |
+| Back up time entries only | Data Management → Export Time Entries to CSV (no selection, full range) |
+| Back up pay scale settings | Data Management → Export Meta Data to CSV |
+| Move data to a new browser | Export ALL on old browser → Import (Replace All) on new browser |
 | Combine data from two browsers | Export each → Import (Add to Existing) the second file on the first browser |
 | Access data on all my devices | Set up Cloud Sync (see [cloud-sync-setup.md](cloud-sync-setup.md)) |
-| Restore a backup | Data Viewer → Import → Replace All → choose the backup CSV |
+| Restore a backup | Data Management → Import → Replace All → choose the backup CSV |

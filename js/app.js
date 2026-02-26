@@ -7,7 +7,8 @@
  * FILE STRUCTURE:
  * - js/common.js       — Shared utilities (storage, formatting, CSV)
  * - js/time-entries.js — Time Entries view (clock in/out, entries table)
- * - js/data-viewer.js  — Data Viewer view (export/import, read-only table)
+ * - js/data-viewer.js  — Data Viewer view (export/import, read-only table, sub-tabs)
+ * - js/meta-data.js    — Meta Data view (USPS pay scale settings form)
  * - js/cloud-sync.js   — Firebase cloud sync module
  * - js/firebase-config.js — Firebase configuration
  *
@@ -15,10 +16,11 @@
  * 1. common.js (shared utilities)
  * 2. time-entries.js (Time Entries view)
  * 3. data-viewer.js (Data Viewer view)
- * 4. app.js (this file - initialization)
- * 5. Firebase SDK (external)
- * 6. firebase-config.js
- * 7. cloud-sync.js
+ * 4. meta-data.js (Meta Data view)
+ * 5. app.js (this file - initialization)
+ * 6. Firebase SDK (external)
+ * 7. firebase-config.js
+ * 8. cloud-sync.js
  *
  * WHAT BELONGS HERE:
  * - Application initialization

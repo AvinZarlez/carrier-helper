@@ -33,6 +33,7 @@
 /* global validateNoOverlap, validateSingleOpenEntry */
 /* global loadMetaData, saveMetaData, generateMetaDataCSV, parseMetaDataCSV */
 /* global detectCSVType, generateAllDataCSV, parseAllDataCSV, renderMetaDataForm */
+/* global getExportEntries */
 
 // ── DOM References ──────────────────────────────────────────────────────────
 
@@ -89,6 +90,7 @@ const dvSubMetaData = document.getElementById("dv-sub-meta-data");
 const dvTimeEntriesSub = document.getElementById("dv-time-entries-sub");
 const dvMetaDataSub = document.getElementById("dv-meta-data-sub");
 const exportAllBtn = document.getElementById("export-all-btn");
+const exportMetaDataBtn = document.getElementById("export-metadata-btn");
 
 /** Currently active data-viewer sub-tab: "time-entries" or "meta-data". */
 let activeSubTab = "time-entries";
@@ -680,27 +682,50 @@ dvDeselectAllBtn.addEventListener("click", clearSelection);
 // ── Export ──────────────────────────────────────────────────────────────────
 
 /**
- * Export data based on the active sub-tab.
- * Time Entries sub-tab: exports all time entries as CSV.
- * Meta Data sub-tab: exports metadata as CSV.
+ * Export time entries for the current view as CSV.
+ * If entries are selected, exports only those. Otherwise exports all entries
+ * visible in the current date view (week or custom range).
+ * Entries outside the current view range are never included.
  */
 function exportToCSV() {
-  let csv, filename;
-  if (activeSubTab === "meta-data") {
-    const meta = loadMetaData();
-    csv = generateMetaDataCSV(meta);
-    filename = `carrier-helper-metadata-${new Date().toISOString().slice(0, 10)}.csv`;
-  } else {
-    const entries = loadEntries();
-    csv = generateCSV(entries);
-    filename = `carrier-helper-${new Date().toISOString().slice(0, 10)}.csv`;
+  // Default to week mode bounds; override if a valid custom range is active
+  let viewStart = currentWeekStart;
+  let viewEnd = new Date(currentWeekStart);
+  viewEnd.setDate(viewEnd.getDate() + 7); // exclusive upper bound (same as renderDataViewer)
+  let exclusiveEnd = true;
+  if (viewMode === "range" && customRangeStart && customRangeEnd) {
+    viewStart = new Date(customRangeStart + "T00:00:00");
+    viewEnd = new Date(customRangeEnd + "T23:59:59.999");
+    exclusiveEnd = false;
   }
+
+  const entries = getExportEntries(loadEntries(), selectedEntryIds, viewStart, viewEnd, exclusiveEnd);
+  const csv = generateCSV(entries);
+  const filename = `carrier-helper-${new Date().toISOString().slice(0, 10)}.csv`;
 
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
   a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Export metadata (USPS pay scale settings) as a CSV file.
+ */
+function exportMetaDataToCSV() {
+  const meta = loadMetaData();
+  const csv = generateMetaDataCSV(meta);
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `carrier-helper-metadata-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -727,6 +752,7 @@ function exportAllDataToCSV() {
 }
 
 exportBtn.addEventListener("click", exportToCSV);
+exportMetaDataBtn.addEventListener("click", exportMetaDataToCSV);
 exportAllBtn.addEventListener("click", exportAllDataToCSV);
 
 // ── Export Date Range ───────────────────────────────────────────────────────
@@ -937,6 +963,7 @@ if (typeof module !== "undefined" && module.exports) {
     showSubTab,
     renderDataViewer,
     exportToCSV,
+    exportMetaDataToCSV,
     exportAllDataToCSV,
     exportRangeToCSV,
     openEditModal,

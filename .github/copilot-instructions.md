@@ -29,15 +29,18 @@ carrier-helper/
 ├── css/
 │   └── style.css           # All application styles
 ├── js/
-│   ├── common.js           # Shared utilities (storage, formatting, CSV)
+│   ├── common.js           # Shared utilities (storage, formatting, CSV, metadata)
 │   ├── time-entries.js     # Time Entries view logic
-│   ├── data-viewer.js      # Data Viewer view logic
+│   ├── data-viewer.js      # Data Viewer view logic (sub-tabs, export, import)
+│   ├── meta-data.js        # Meta Data view logic (USPS pay scale settings form)
 │   ├── app.js              # Application bootstrap
 │   ├── firebase-config.js  # Firebase configuration (empty by default)
 │   └── cloud-sync.js       # Firebase cloud sync module
 ├── tests/
 │   ├── setup.js            # Jest test setup
-│   └── common.test.js      # Tests for common.js
+│   ├── common.test.js      # Tests for common.js core utilities
+│   ├── meta-data.test.js   # Tests for common.js metadata utilities
+│   └── export-import.test.js # Tests for export filtering and import/export round-trips
 ├── docs/
 │   ├── README.md           # Documentation index
 │   ├── github-pages-setup.md
@@ -48,6 +51,7 @@ carrier-helper/
 │   ├── copilot-instructions.md  # This file
 │   └── workflows/
 │       ├── deploy.yml      # GitHub Pages deployment
+│       ├── lint.yml        # ESLint + markdownlint
 │       └── test.yml        # Unit test workflow
 ├── package.json            # npm configuration for testing
 └── .gitignore
@@ -60,20 +64,22 @@ carrier-helper/
 1. `js/common.js` — Shared utilities (must load first)
 2. `js/time-entries.js` — Time Entries view
 3. `js/data-viewer.js` — Data Viewer view
-4. `js/app.js` — Application initialization
-5. Firebase SDK (external CDN)
-6. `js/firebase-config.js` — Firebase configuration
-7. `js/cloud-sync.js` — Cloud sync module
+4. `js/meta-data.js` — Meta Data view
+5. `js/app.js` — Application initialization
+6. Firebase SDK (external CDN)
+7. `js/firebase-config.js` — Firebase configuration
+8. `js/cloud-sync.js` — Cloud sync module
 
 ### Module Responsibilities
 
 | File | Responsibility |
 |------|----------------|
-| `common.js` | Storage, formatting, CSV utilities (no DOM) |
+| `common.js` | Storage, formatting, CSV utilities, metadata utilities (no DOM) |
 | `time-entries.js` | Clock panel, entries table, delete/clear |
-| `data-viewer.js` | Data table, export, import, tab navigation |
+| `data-viewer.js` | Sub-tabs, data table, export, import, tab navigation |
+| `meta-data.js` | Meta Data form rendering, save/reset, status messages |
 | `app.js` | Bootstrap and initialization |
-| `cloud-sync.js` | Firebase auth and Firestore sync |
+| `cloud-sync.js` | Firebase auth and Firestore sync (entries + metadata) |
 
 ### Key Functions
 
@@ -81,8 +87,15 @@ carrier-helper/
 - `loadEntries()` — Load from localStorage
 - `saveEntries(entries)` — Save to localStorage + cloud sync
 - `formatDate/Time/Duration()` — Date formatting
-- `parseCSV()` / `generateCSV()` — CSV handling
+- `parseCSV()` / `generateCSV()` — Time entries CSV handling
 - `mergeEntries()` — Deduplicate and sort entries
+- `getDefaultMetaData()` — USPS pay scale defaults
+- `loadMetaData()` / `saveMetaData(meta)` — Metadata localStorage + cloud sync
+- `generateMetaDataCSV(meta)` / `parseMetaDataCSV(text)` — Metadata CSV
+- `generateAllDataCSV(entries, meta)` / `parseAllDataCSV(text)` — Combined CSV
+- `detectCSVType(text)` — Detect "entries", "metadata", "all", or "unknown"
+- `filterEntriesByRange(entries, start, end, exclusiveEnd)` — Filter by date range
+- `getExportEntries(entries, selectedIds, start, end, exclusiveEnd)` — Selection-aware export filter
 
 #### time-entries.js
 - `handleClockButton()` — Clock in/out logic
@@ -91,18 +104,30 @@ carrier-helper/
 - `getPreviousShiftsEntries()` — Get entries for the Previous Shifts section
 
 #### data-viewer.js
-- `renderDataViewer()` — Render read-only table
-- `exportToCSV()` — Download CSV file
-- `showTab()` — Switch between views
+- `renderDataViewer()` — Render read-only table for current view (week or range)
+- `showTab(tab)` — Switch between main views
+- `showSubTab(subTab)` — Switch between Time Entries and Meta Data sub-tabs
+- `exportToCSV()` — Export current-view time entries (selection-aware)
+- `exportMetaDataToCSV()` — Export metadata as CSV
+- `exportAllDataToCSV()` — Export all entries + metadata as combined CSV
+
+#### meta-data.js
+- `renderMetaDataForm()` — Populate form with stored (or default) values
+- `saveMetaDataForm()` — Read form inputs and persist metadata
+- `resetMetaDataForm()` — Reset all fields to USPS defaults
 
 ## Development Guidelines
 
 ### Making Changes
 
 1. **Identify the correct file** — Use the module responsibilities table above
-2. **Run tests before and after** — `npm test`
-3. **Test in browser** — Start a local server and verify UI
-4. **Update documentation** — If changing behavior or adding features
+2. **Run lint before and after** — `npm run lint` (catches unused variables, syntax errors, style issues)
+3. **Run tests before and after** — `npm test`
+4. **Test in browser** — Start a local server and verify UI
+5. **Update documentation** — If changing behavior or adding features
+
+> **Important:** Always run both `npm run lint` and `npm test` locally before pushing.
+> CI runs both checks on every PR and will fail if either is broken.
 
 ### Adding New Features
 
@@ -117,6 +142,10 @@ carrier-helper/
 - Keep DOM references at the top of view files
 - Export functions for testing via `module.exports` check
 - No external dependencies except Firebase (which is optional)
+- **`/* global */` comments**: only declare globals that are **directly called** in that file.
+  Listing a global that is never referenced will trigger ESLint's `no-unused-vars` rule.
+  Example: if `common.js` exports both `filterEntriesByRange` and `getExportEntries` but
+  a view file only calls `getExportEntries`, only `getExportEntries` goes in the `/* global */` comment.
 
 ## Testing
 
