@@ -132,6 +132,14 @@
 
     <!-- Data Viewer View -->
     <div id="data-viewer-view" style="display: none">
+      <!-- Sub-tab navigation within Data Viewer -->
+      <nav class="dv-sub-nav">
+        <button id="dv-sub-time-entries" class="btn-sub-tab active">Time Entries</button>
+        <button id="dv-sub-meta-data" class="btn-sub-tab">Meta Data</button>
+      </nav>
+
+      <!-- Time Entries sub-view (existing data viewer) -->
+      <div id="dv-time-entries-sub">
       <section class="entries-panel">
         <div class="entries-header">
           <h2>All Time Entries</h2>
@@ -200,7 +208,8 @@
             <div class="data-mgmt-section">
               <h3>Export Data</h3>
               <div class="export-buttons">
-                <button id="export-btn" class="btn btn-export">📥 Export All to CSV</button>
+                <button id="export-btn" class="btn btn-export">📥 Export Current View to CSV</button>
+                <button id="export-all-btn" class="btn btn-export">📦 Export ALL Data to CSV</button>
                 <button id="export-range-btn" class="btn btn-export-range">📅 Export Date Range to CSV</button>
               </div>
               <div class="export-range-form" id="export-range-form" style="display:none">
@@ -214,7 +223,10 @@
                   <button id="export-range-cancel-btn" class="btn-secondary-sm">Cancel</button>
                 </div>
               </div>
-              <p class="mgmt-note">Download time entries as a CSV file.</p>
+              <p class="mgmt-note">
+                <strong>Export Current View:</strong> Downloads the data for the active sub-tab (Time Entries or Meta Data).<br>
+                <strong>Export ALL Data:</strong> Downloads both time entries and meta data in a single file.
+              </p>
             </div>
 
             <div class="data-mgmt-section">
@@ -236,8 +248,9 @@
                 </button>
               </div>
               <p class="mgmt-note">
-                <strong>Add to Existing:</strong> Merges the CSV with your current entries (duplicates skipped).<br>
-                <strong>Replace All:</strong> ⚠️ Permanently deletes all current data and replaces it with the CSV file.
+                Automatically detects data type (time entries, meta data, or both).<br>
+                <strong>Add to Existing:</strong> Merges the CSV with your current data (duplicates skipped).<br>
+                <strong>Replace All:</strong> ⚠️ Permanently deletes matching data and replaces with the CSV file.
               </p>
               <!-- Hidden file input for import -->
               <input type="file" id="import-file-input" accept=".csv" style="display: none" />
@@ -251,6 +264,110 @@
           </div>
         </div>
       </section>
+      </div><!-- /dv-time-entries-sub -->
+
+      <!-- Meta Data sub-view -->
+      <div id="dv-meta-data-sub" style="display: none">
+        <section class="entries-panel">
+          <div class="entries-header">
+            <h2>📋 USPS Pay Scale Settings</h2>
+          </div>
+          <p class="meta-description">
+            Configure your USPS mail carrier pay rates and thresholds. These values are used
+            to calculate expected pay from your time entries. Defaults are based on the NALC
+            National Agreement for City Letter Carriers.
+          </p>
+
+          <div class="meta-form" id="meta-data-form">
+            <!-- Pay Rates Section -->
+            <div class="meta-section">
+              <h3>💰 Pay Rates</h3>
+              <div class="meta-field">
+                <label for="meta-baseHourlyRate">Base Hourly Rate ($/hr)</label>
+                <input type="number" id="meta-baseHourlyRate" step="0.01" min="0" />
+                <span class="meta-hint">Your regular hourly wage (Grade 1, Step BB default: $23.49)</span>
+              </div>
+              <div class="meta-field">
+                <label for="meta-nightDifferentialRate">Night Differential (additional $/hr)</label>
+                <input type="number" id="meta-nightDifferentialRate" step="0.01" min="0" />
+                <span class="meta-hint">Extra pay per hour for night work (default: $1.08)</span>
+              </div>
+            </div>
+
+            <!-- Overtime Multipliers Section -->
+            <div class="meta-section">
+              <h3>⏱️ Overtime Multipliers</h3>
+              <div class="meta-field">
+                <label for="meta-overtimeMultiplier">Overtime Rate (× base rate)</label>
+                <input type="number" id="meta-overtimeMultiplier" step="0.01" min="1" />
+                <span class="meta-hint">Applied after daily/weekly overtime thresholds (default: 1.5×)</span>
+              </div>
+              <div class="meta-field">
+                <label for="meta-penaltyOvertimeMultiplier">Penalty Overtime Rate (× base rate)</label>
+                <input type="number" id="meta-penaltyOvertimeMultiplier" step="0.01" min="1" />
+                <span class="meta-hint">Applied after penalty overtime thresholds (default: 2.0×)</span>
+              </div>
+              <div class="meta-field">
+                <label for="meta-sundayPremiumPercent">Sunday Premium (%)</label>
+                <input type="number" id="meta-sundayPremiumPercent" step="1" min="0" max="100" />
+                <span class="meta-hint">Additional percentage of base rate for Sunday hours (default: 25%)</span>
+              </div>
+            </div>
+
+            <!-- Overtime Thresholds Section -->
+            <div class="meta-section">
+              <h3>📊 Overtime Thresholds</h3>
+              <div class="meta-field-row">
+                <div class="meta-field">
+                  <label for="meta-dailyOvertimeThresholdHours">Daily OT Threshold (hours)</label>
+                  <input type="number" id="meta-dailyOvertimeThresholdHours" step="0.5" min="0" />
+                  <span class="meta-hint">Overtime starts after this many hours/day (default: 8)</span>
+                </div>
+                <div class="meta-field">
+                  <label for="meta-dailyPenaltyOTThresholdHours">Daily Penalty OT Threshold (hours)</label>
+                  <input type="number" id="meta-dailyPenaltyOTThresholdHours" step="0.5" min="0" />
+                  <span class="meta-hint">Penalty overtime after this many hours/day (default: 10)</span>
+                </div>
+              </div>
+              <div class="meta-field-row">
+                <div class="meta-field">
+                  <label for="meta-weeklyOvertimeThresholdHours">Weekly OT Threshold (hours)</label>
+                  <input type="number" id="meta-weeklyOvertimeThresholdHours" step="0.5" min="0" />
+                  <span class="meta-hint">Overtime starts after this many hours/week (default: 40)</span>
+                </div>
+                <div class="meta-field">
+                  <label for="meta-weeklyPenaltyOTThresholdHours">Weekly Penalty OT Threshold (hours)</label>
+                  <input type="number" id="meta-weeklyPenaltyOTThresholdHours" step="0.5" min="0" />
+                  <span class="meta-hint">Penalty overtime after this many hours/week (default: 56)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Night Differential Time Window Section -->
+            <div class="meta-section">
+              <h3>🌙 Night Differential Window</h3>
+              <div class="meta-field-row">
+                <div class="meta-field">
+                  <label for="meta-nightDiffStartTime">Night Start Time</label>
+                  <input type="time" id="meta-nightDiffStartTime" />
+                  <span class="meta-hint">Night hours begin (default: 6:00 PM)</span>
+                </div>
+                <div class="meta-field">
+                  <label for="meta-nightDiffEndTime">Night End Time</label>
+                  <input type="time" id="meta-nightDiffEndTime" />
+                  <span class="meta-hint">Night hours end (default: 6:00 AM)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="meta-actions">
+              <button id="meta-save-btn" class="btn btn-primary">💾 Save Changes</button>
+              <button id="meta-reset-btn" class="btn btn-secondary">↩️ Reset to Defaults</button>
+            </div>
+            <div id="meta-save-status" class="meta-save-status" style="display: none"></div>
+          </div>
+        </section>
+      </div><!-- /dv-meta-data-sub -->
     </div>
   </main>
 
@@ -294,6 +411,7 @@
   <script src="js/common.js"></script>
   <script src="js/time-entries.js"></script>
   <script src="js/data-viewer.js"></script>
+  <script src="js/meta-data.js"></script>
   <script src="js/app.js"></script>
   <!-- Firebase SDK (only active when firebase-config.js has a non-empty apiKey) -->
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>

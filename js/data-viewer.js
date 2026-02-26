@@ -31,6 +31,8 @@
 /* global loadEntries, saveEntries, mergeEntries, formatDate, formatTime */
 /* global formatDuration, parseCSV, generateCSV, renderTimeEntries, validateEntry */
 /* global validateNoOverlap, validateSingleOpenEntry */
+/* global loadMetaData, saveMetaData, generateMetaDataCSV, parseMetaDataCSV */
+/* global detectCSVType, generateAllDataCSV, parseAllDataCSV, renderMetaDataForm */
 
 // ── DOM References ──────────────────────────────────────────────────────────
 
@@ -80,6 +82,16 @@ const dvSelectionCount = document.getElementById("dv-selection-count");
 const dvDeleteSelectedBtn = document.getElementById("dv-delete-selected-btn");
 const dvDeselectAllBtn = document.getElementById("dv-deselect-all-btn");
 const dvSelectAllBtn = document.getElementById("dv-select-all-btn");
+
+// Sub-tab navigation
+const dvSubTimeEntries = document.getElementById("dv-sub-time-entries");
+const dvSubMetaData = document.getElementById("dv-sub-meta-data");
+const dvTimeEntriesSub = document.getElementById("dv-time-entries-sub");
+const dvMetaDataSub = document.getElementById("dv-meta-data-sub");
+const exportAllBtn = document.getElementById("export-all-btn");
+
+/** Currently active data-viewer sub-tab: "time-entries" or "meta-data". */
+let activeSubTab = "time-entries";
 
 // ── Week Navigation Helpers ─────────────────────────────────────────────────
 
@@ -263,7 +275,11 @@ function showTab(tab) {
     dataViewerView.style.display = "block";
     navTimeEntries.classList.remove("active");
     navDataViewer.classList.add("active");
-    renderDataViewer();
+    if (activeSubTab === "meta-data") {
+      if (typeof renderMetaDataForm === "function") renderMetaDataForm();
+    } else {
+      renderDataViewer();
+    }
   } else {
     dataViewerView.style.display = "none";
     timeEntriesView.style.display = "block";
@@ -274,6 +290,32 @@ function showTab(tab) {
 
 navTimeEntries.addEventListener("click", () => showTab("time-entries"));
 navDataViewer.addEventListener("click", () => showTab("data-viewer"));
+
+// ── Data Viewer Sub-tab Navigation ──────────────────────────────────────────
+
+/**
+ * Switch between Time Entries and Meta Data sub-tabs within the Data Viewer.
+ * @param {string} subTab - "time-entries" or "meta-data"
+ */
+function showSubTab(subTab) {
+  activeSubTab = subTab;
+  if (subTab === "meta-data") {
+    dvTimeEntriesSub.style.display = "none";
+    dvMetaDataSub.style.display = "block";
+    dvSubTimeEntries.classList.remove("active");
+    dvSubMetaData.classList.add("active");
+    if (typeof renderMetaDataForm === "function") renderMetaDataForm();
+  } else {
+    dvMetaDataSub.style.display = "none";
+    dvTimeEntriesSub.style.display = "block";
+    dvSubMetaData.classList.remove("active");
+    dvSubTimeEntries.classList.add("active");
+    renderDataViewer();
+  }
+}
+
+dvSubTimeEntries.addEventListener("click", () => showSubTab("time-entries"));
+dvSubMetaData.addEventListener("click", () => showSubTab("meta-data"));
 
 // ── Data Management Collapse Toggle ─────────────────────────────────────────
 
@@ -638,17 +680,46 @@ dvDeselectAllBtn.addEventListener("click", clearSelection);
 // ── Export ──────────────────────────────────────────────────────────────────
 
 /**
- * Export all entries to a CSV file and trigger download.
+ * Export data based on the active sub-tab.
+ * Time Entries sub-tab: exports all time entries as CSV.
+ * Meta Data sub-tab: exports metadata as CSV.
  */
 function exportToCSV() {
-  const entries = loadEntries();
-  const csv = generateCSV(entries);
+  let csv, filename;
+  if (activeSubTab === "meta-data") {
+    const meta = loadMetaData();
+    csv = generateMetaDataCSV(meta);
+    filename = `carrier-helper-metadata-${new Date().toISOString().slice(0, 10)}.csv`;
+  } else {
+    const entries = loadEntries();
+    csv = generateCSV(entries);
+    filename = `carrier-helper-${new Date().toISOString().slice(0, 10)}.csv`;
+  }
 
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `carrier-helper-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Export all data (both time entries and metadata) as a single CSV file.
+ */
+function exportAllDataToCSV() {
+  const entries = loadEntries();
+  const meta = loadMetaData();
+  const csv = generateAllDataCSV(entries, meta);
+
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `carrier-helper-all-data-${new Date().toISOString().slice(0, 10)}.csv`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -656,6 +727,7 @@ function exportToCSV() {
 }
 
 exportBtn.addEventListener("click", exportToCSV);
+exportAllBtn.addEventListener("click", exportAllDataToCSV);
 
 // ── Export Date Range ───────────────────────────────────────────────────────
 
@@ -762,7 +834,7 @@ importReplaceBtn.addEventListener("click", () => {
 
 /**
  * Handle file selection for import.
- * Parses the CSV and either merges or replaces entries based on importMode.
+ * Auto-detects the CSV type (entries, metadata, or combined) and handles accordingly.
  */
 importFileInput.addEventListener("change", (event) => {
   const file = event.target.files[0];
@@ -770,38 +842,89 @@ importFileInput.addEventListener("change", (event) => {
 
   const reader = new FileReader();
   reader.onload = (e) => {
-    const parsed = parseCSV(e.target.result);
-    if (!parsed) {
+    const text = e.target.result;
+    const csvType = detectCSVType(text);
+
+    if (csvType === "unknown") {
       alert("Could not read the CSV file. Make sure it was exported from Carrier Helper.");
       importFileInput.value = "";
       return;
     }
 
-    if (importMode === "replace") {
-      if (
-        !confirm(
-          `Replace ALL ${loadEntries().length} existing entries with ${parsed.length} entries from the file? This cannot be undone.`
-        )
-      ) {
+    if (csvType === "all") {
+      // Combined file: import both entries and metadata
+      const parsed = parseAllDataCSV(text);
+      if (!parsed) {
+        alert("Could not parse the combined data file.");
         importFileInput.value = "";
         return;
       }
-      saveEntries(parsed);
-    } else {
-      // add / merge
-      const merged = mergeEntries(loadEntries(), parsed);
-      saveEntries(merged);
-    }
+      if (importMode === "replace") {
+        if (!confirm(`Replace all data with ${parsed.entries.length} entries and metadata settings from the file? This cannot be undone.`)) {
+          importFileInput.value = "";
+          return;
+        }
+        saveEntries(parsed.entries);
+        if (Object.keys(parsed.meta).length > 0) {
+          saveMetaData({ ...loadMetaData(), ...parsed.meta });
+        }
+      } else {
+        const merged = mergeEntries(loadEntries(), parsed.entries);
+        saveEntries(merged);
+        if (Object.keys(parsed.meta).length > 0) {
+          saveMetaData({ ...loadMetaData(), ...parsed.meta });
+        }
+      }
+      importFileInput.value = "";
+      if (typeof renderTimeEntries === "function") renderTimeEntries();
+      if (typeof renderMetaDataForm === "function") renderMetaDataForm();
+      renderDataViewer();
+      alert(`Import complete. ${loadEntries().length} entries and metadata settings imported.`);
 
-    importFileInput.value = "";
-    
-    // Refresh both views
-    if (typeof renderTimeEntries === "function") {
-      renderTimeEntries();
+    } else if (csvType === "metadata") {
+      // Metadata only
+      const parsed = parseMetaDataCSV(text);
+      if (!parsed) {
+        alert("Could not parse the metadata CSV file.");
+        importFileInput.value = "";
+        return;
+      }
+      if (importMode === "replace") {
+        if (!confirm("Replace all metadata settings with values from the file? This cannot be undone.")) {
+          importFileInput.value = "";
+          return;
+        }
+        saveMetaData(parsed);
+      } else {
+        saveMetaData({ ...loadMetaData(), ...parsed });
+      }
+      importFileInput.value = "";
+      if (typeof renderMetaDataForm === "function") renderMetaDataForm();
+      alert("Import complete. Metadata settings updated.");
+
+    } else {
+      // Time entries
+      const parsed = parseCSV(text);
+      if (!parsed) {
+        alert("Could not read the CSV file. Make sure it was exported from Carrier Helper.");
+        importFileInput.value = "";
+        return;
+      }
+      if (importMode === "replace") {
+        if (!confirm(`Replace ALL ${loadEntries().length} existing entries with ${parsed.length} entries from the file? This cannot be undone.`)) {
+          importFileInput.value = "";
+          return;
+        }
+        saveEntries(parsed);
+      } else {
+        const merged = mergeEntries(loadEntries(), parsed);
+        saveEntries(merged);
+      }
+      importFileInput.value = "";
+      if (typeof renderTimeEntries === "function") renderTimeEntries();
+      renderDataViewer();
+      alert(`Import complete. ${loadEntries().length} entries now stored.`);
     }
-    renderDataViewer();
-    
-    alert(`Import complete. ${loadEntries().length} entries now stored.`);
   };
   reader.readAsText(file);
 });
@@ -811,8 +934,10 @@ importFileInput.addEventListener("change", (event) => {
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     showTab,
+    showSubTab,
     renderDataViewer,
     exportToCSV,
+    exportAllDataToCSV,
     exportRangeToCSV,
     openEditModal,
     closeEditModal,

@@ -1015,3 +1015,159 @@ tbody tr:hover {
 .btn-selection-clear:hover {
   background: rgba(255, 255, 255, 0.3);
 }
+
+/* ── Data Viewer Sub-tab Navigation ── */
+.dv-sub-nav {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.btn-sub-tab {
+  background: #e2e8f0;
+  color: #4a5568;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  padding: 0.45rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-sub-tab:hover {
+  background: #cbd5e0;
+}
+
+.btn-sub-tab.active {
+  background: #2b6cb0;
+  color: #fff;
+  border-color: #2b6cb0;
+}
+
+/* ── Meta Data Form ── */
+.meta-description {
+  color: #718096;
+  font-size: 0.88rem;
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+.meta-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.meta-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  background: #f7fafc;
+}
+
+.meta-section h3 {
+  font-size: 1rem;
+  color: #2d3748;
+  margin-bottom: 0.75rem;
+}
+
+.meta-field {
+  margin-bottom: 0.85rem;
+}
+
+.meta-field:last-child {
+  margin-bottom: 0;
+}
+
+.meta-field label {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #4a5568;
+  margin-bottom: 0.3rem;
+}
+
+.meta-field input[type="number"],
+.meta-field input[type="time"] {
+  width: 100%;
+  max-width: 200px;
+  padding: 0.45rem 0.65rem;
+  border: 1px solid #cbd5e0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #2d3748;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.meta-field input:focus {
+  border-color: #2b6cb0;
+}
+
+.meta-hint {
+  display: block;
+  font-size: 0.78rem;
+  color: #a0aec0;
+  margin-top: 0.2rem;
+}
+
+.meta-field-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.meta-field-row .meta-field {
+  flex: 1;
+  min-width: 180px;
+}
+
+.meta-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.meta-save-status {
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.meta-save-success {
+  background: #f0fff4;
+  color: #276749;
+  border: 1px solid #9ae6b4;
+}
+
+.meta-save-info {
+  background: #ebf8ff;
+  color: #2b6cb0;
+  border: 1px solid #90cdf4;
+}
+
+@media (max-width: 600px) {
+  .meta-field-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .meta-field input[type="number"],
+  .meta-field input[type="time"] {
+    max-width: 100%;
+  }
+
+  .dv-sub-nav {
+    gap: 0.3rem;
+  }
+
+  .btn-sub-tab {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.82rem;
+  }
+}

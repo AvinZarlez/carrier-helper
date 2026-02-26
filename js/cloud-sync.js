@@ -34,7 +34,7 @@
  * - Non-Firebase related functionality
  */
 
-/* global firebaseConfig, loadEntries, saveEntries, render */
+/* global firebaseConfig, loadEntries, saveEntries, loadMetaData, saveMetaData, render */
 
 // eslint-disable-next-line no-unused-vars
 const CloudSyncModule = (function () {
@@ -127,7 +127,7 @@ const CloudSyncModule = (function () {
         await auth.signOut();
     }
 
-    // Upload all local entries to Firestore
+    // Upload all local entries and metadata to Firestore
     async function syncToCloud() {
         if (!db || !currentUser) {
             return;
@@ -138,6 +138,7 @@ const CloudSyncModule = (function () {
             updateSyncStatus('syncing');
 
             const localEntries = loadEntries();
+            const localMeta = typeof loadMetaData === 'function' ? loadMetaData() : {};
             const docRef = db
                 .collection('users')
                 .doc(currentUser.uid)
@@ -146,6 +147,7 @@ const CloudSyncModule = (function () {
 
             await docRef.set({
                 entries: localEntries,
+                metaData: localMeta,
                 lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
                 lastUpdatedBy: navigator.userAgent
             });
@@ -159,7 +161,7 @@ const CloudSyncModule = (function () {
         }
     }
 
-    // Download cloud entries and merge with local data
+    // Download cloud entries and metadata, merge with local data
     async function syncFromCloud() {
         if (!db || !currentUser) {
             return;
@@ -177,10 +179,18 @@ const CloudSyncModule = (function () {
             const doc = await docRef.get();
 
             if (doc.exists) {
-                const cloudEntries = doc.data().entries || [];
+                const data = doc.data();
+                const cloudEntries = data.entries || [];
                 const localEntries = loadEntries();
                 const merged = mergeEntries(localEntries, cloudEntries);
                 saveEntries(merged);
+
+                // Sync metadata if present
+                if (data.metaData && typeof saveMetaData === 'function' && typeof loadMetaData === 'function') {
+                    const localMeta = loadMetaData();
+                    saveMetaData({ ...localMeta, ...data.metaData });
+                }
+
                 render();
             } else {
                 // No cloud data yet — upload what we have locally
@@ -222,8 +232,15 @@ const CloudSyncModule = (function () {
                 return; // Ignore our own writes
             }
             if (doc.exists) {
-                const cloudEntries = doc.data().entries || [];
+                const data = doc.data();
+                const cloudEntries = data.entries || [];
                 saveEntries(cloudEntries);
+
+                // Sync metadata if present
+                if (data.metaData && typeof saveMetaData === 'function') {
+                    saveMetaData(data.metaData);
+                }
+
                 render();
                 updateSyncStatus('synced');
             }
