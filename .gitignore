@@ -23,3 +23,9 @@ Thumbs.db
 
 # Node (if any tooling is added later)
 node_modules/
+
+# Test coverage output
+coverage/
+
+# npm debug logs
+npm-debug.log*

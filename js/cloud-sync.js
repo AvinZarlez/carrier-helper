@@ -1,6 +1,38 @@
-// Cloud Sync Module
-// Provides Firebase Authentication and Firestore sync so users can access
-// their time-entry data from any browser or device.
+/**
+ * cloud-sync.js — Firebase Cloud Sync Module for Carrier Helper
+ *
+ * This file provides optional cloud synchronization using Firebase.
+ * When configured, users can sync their time entries across multiple
+ * browsers and devices using email/password authentication.
+ *
+ * RESPONSIBILITIES:
+ * - Firebase initialization and configuration detection
+ * - User authentication (sign in, sign up, sign out)
+ * - Firestore data synchronization (upload, download, real-time sync)
+ * - Auth UI updates (login button, user status, sync status)
+ * - Error handling and user-friendly error messages
+ *
+ * DEPENDENCIES:
+ * - Firebase SDK (loaded externally from CDN)
+ * - firebase-config.js (configuration values)
+ * - common.js (loadEntries, saveEntries, mergeEntries)
+ * - time-entries.js (render function for UI updates)
+ *
+ * CONFIGURATION:
+ * - Edit js/firebase-config.js with your Firebase project values
+ * - See docs/cloud-sync-setup.md for step-by-step setup instructions
+ *
+ * WHAT BELONGS HERE:
+ * - All Firebase-related logic
+ * - Authentication flows
+ * - Cloud data synchronization
+ * - Auth modal handling
+ *
+ * WHAT DOES NOT BELONG HERE:
+ * - Local storage operations (use common.js)
+ * - View-specific rendering (use time-entries.js or data-viewer.js)
+ * - Non-Firebase related functionality
+ */
 
 // eslint-disable-next-line no-unused-vars
 const CloudSyncModule = (function () {
