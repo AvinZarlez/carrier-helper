@@ -172,43 +172,51 @@
         </div>
       </section>
 
-      <section class="data-mgmt-panel">
-        <div class="data-mgmt-section">
-          <h3>Export Data</h3>
-          <button id="export-btn" class="btn btn-export">📥 Export All to CSV</button>
-          <p class="mgmt-note">Download all time entries as a CSV file.</p>
+      <section class="entries-panel" id="data-mgmt-panel">
+        <div class="entries-header">
+          <h2>Data Management</h2>
+          <button class="btn-collapse collapsed" id="data-mgmt-toggle" aria-expanded="false" title="Collapse section">▼</button>
         </div>
+        <div class="panel-body collapsed" id="data-mgmt-body">
+          <div class="data-mgmt-sections">
+            <div class="data-mgmt-section">
+              <h3>Export Data</h3>
+              <button id="export-btn" class="btn btn-export">📥 Export All to CSV</button>
+              <p class="mgmt-note">Download all time entries as a CSV file.</p>
+            </div>
 
-        <div class="data-mgmt-section">
-          <h3>Import Data</h3>
-          <div class="import-buttons">
-            <button id="import-add-btn" class="btn btn-import-add">
-              <span class="btn-icon">➕</span>
-              <span class="btn-text">
-                <strong>Add to Existing</strong>
-                <small>Merge with current data</small>
-              </span>
-            </button>
-            <button id="import-replace-btn" class="btn btn-import-replace">
-              <span class="btn-icon">🔄</span>
-              <span class="btn-text">
-                <strong>Replace All</strong>
-                <small>Delete &amp; replace all data</small>
-              </span>
-            </button>
+            <div class="data-mgmt-section">
+              <h3>Import Data</h3>
+              <div class="import-buttons">
+                <button id="import-add-btn" class="btn btn-import-add">
+                  <span class="btn-icon">➕</span>
+                  <span class="btn-text">
+                    <strong>Add to Existing</strong>
+                    <small>Merge with current data</small>
+                  </span>
+                </button>
+                <button id="import-replace-btn" class="btn btn-import-replace">
+                  <span class="btn-icon">🔄</span>
+                  <span class="btn-text">
+                    <strong>Replace All</strong>
+                    <small>Delete &amp; replace all data</small>
+                  </span>
+                </button>
+              </div>
+              <p class="mgmt-note">
+                <strong>Add to Existing:</strong> Merges the CSV with your current entries (duplicates skipped).<br>
+                <strong>Replace All:</strong> ⚠️ Permanently deletes all current data and replaces it with the CSV file.
+              </p>
+              <!-- Hidden file input for import -->
+              <input type="file" id="import-file-input" accept=".csv" style="display: none" />
+            </div>
+
+            <div class="data-mgmt-section">
+              <h3>Delete Local Data</h3>
+              <button id="delete-all-btn" class="btn btn-delete-all">🗑 Delete All Local Data</button>
+              <p class="mgmt-note">⚠️ Permanently deletes <strong>all</strong> locally stored time entries. This cannot be undone.</p>
+            </div>
           </div>
-          <p class="mgmt-note">
-            <strong>Add to Existing:</strong> Merges the CSV with your current entries (duplicates skipped).<br>
-            <strong>Replace All:</strong> ⚠️ Permanently deletes all current data and replaces it with the CSV file.
-          </p>
-          <!-- Hidden file input for import -->
-          <input type="file" id="import-file-input" accept=".csv" style="display: none" />
-        </div>
-
-        <div class="data-mgmt-section">
-          <h3>Delete Local Data</h3>
-          <button id="delete-all-btn" class="btn btn-delete-all">🗑 Delete All Local Data</button>
-          <p class="mgmt-note">⚠️ Permanently deletes <strong>all</strong> locally stored time entries. This cannot be undone.</p>
         </div>
       </section>
     </div>
