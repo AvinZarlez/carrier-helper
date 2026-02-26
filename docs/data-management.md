@@ -37,6 +37,7 @@ The CSV contains the following columns:
 | `clockIn` | ISO-8601 timestamp of clock-in |
 | `clockOut` | ISO-8601 timestamp of clock-out (empty if still in progress) |
 | `duration` | Formatted duration `HH:MM:SS` (empty if still in progress) |
+| `notes` | Optional notes attached to the entry |
 
 Keep this file as a backup or use it to transfer data to another browser or device.
 

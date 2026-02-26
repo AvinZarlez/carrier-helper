@@ -37,7 +37,10 @@ const entriesBody = document.getElementById("entries-body");
 const emptyMsg = document.getElementById("empty-msg");
 const clearBtn = document.getElementById("clear-btn");
 const currentShiftBody = document.getElementById("current-shift-body");
-const currentShiftEmptyMsg = document.getElementById("current-shift-empty-msg");
+const currentShiftPanel = document.getElementById("current-shift-panel");
+const currentShiftTitle = document.getElementById("current-shift-title");
+const currentShiftBodyWrapper = document.getElementById("current-shift-body-wrapper");
+const previousShiftsBodyWrapper = document.getElementById("previous-shifts-body-wrapper");
 
 // ── Clock Logic ─────────────────────────────────────────────────────────────
 
@@ -105,6 +108,36 @@ function buildCurrentShiftRow(entry) {
 }
 
 /**
+ * Build the HTML string for a completed entry shown in the last-shift table (no row number).
+ * @param {Object} entry
+ * @returns {string} HTML table row
+ */
+function buildLastShiftRow(entry) {
+  const date = formatDate(entry.clockIn);
+  const clockIn = formatTime(entry.clockIn);
+  const clockOut = formatTime(entry.clockOut);
+  const dur = formatDuration(entry.clockIn, entry.clockOut);
+  const durCell = dur
+    ? `<span class="duration-cell">${dur}</span>`
+    : `<span class="pending-cell">—</span>`;
+  const notes = entry.notes
+    ? `<span class="notes-cell" title="${entry.notes.replace(/"/g, "&quot;")}">${entry.notes}</span>`
+    : `<span class="pending-cell">—</span>`;
+  return `
+    <tr data-id="${entry.id}">
+      <td>${date}</td>
+      <td>${clockIn}</td>
+      <td>${clockOut}</td>
+      <td>${durCell}</td>
+      <td>${notes}</td>
+      <td>
+        <button class="btn-edit" data-edit-id="${entry.id}" title="Edit entry">✏️</button>
+        <button class="btn-delete" data-delete-id="${entry.id}" title="Delete entry">🗑</button>
+      </td>
+    </tr>`;
+}
+
+/**
  * Build the HTML string for a row in the previous-shifts table (includes row number).
  * @param {Object} entry
  * @param {number} rowNum - Display row number
@@ -136,6 +169,16 @@ function buildPreviousShiftRow(entry, rowNum) {
         <button class="btn-delete" data-delete-id="${entry.id}" title="Delete entry">🗑</button>
       </td>
     </tr>`;
+}
+
+/**
+ * Return the most recent completed entry (by clockIn time), or null if none.
+ * @param {Array} entries - All stored entries, sorted oldest-first
+ * @returns {Object|null} The last completed entry, or null
+ */
+function getLastShiftEntry(entries) {
+  const completed = entries.filter((e) => e.clockOut !== null);
+  return completed.length > 0 ? completed[completed.length - 1] : null;
 }
 
 /**
@@ -194,13 +237,20 @@ function renderTimeEntries() {
     statusValue.className = "status-out";
   }
 
-  // ── Current Shift ───────────────────────────────────────────────────────
+  // ── Current / Last Shift ────────────────────────────────────────────────
   if (open) {
-    currentShiftEmptyMsg.style.display = "none";
+    currentShiftTitle.textContent = "Current Shift";
+    currentShiftPanel.style.display = "";
     currentShiftBody.innerHTML = buildCurrentShiftRow(open);
   } else {
-    currentShiftBody.innerHTML = "";
-    currentShiftEmptyMsg.style.display = "block";
+    const last = getLastShiftEntry(entries);
+    if (last) {
+      currentShiftTitle.textContent = "Last Shift";
+      currentShiftPanel.style.display = "";
+      currentShiftBody.innerHTML = buildLastShiftRow(last);
+    } else {
+      currentShiftPanel.style.display = "none";
+    }
   }
 
   // ── Previous Shifts ─────────────────────────────────────────────────────
@@ -294,11 +344,28 @@ clockBtn.addEventListener("click", handleClockButton);
 
 /**
  * Initialize the Time Entries view.
- * Sets up the live clock and performs initial render.
+ * Sets up the live clock, collapse toggles, and performs initial render.
  */
 function initTimeEntriesView() {
   tickClock();
   setInterval(tickClock, 1000);
+
+  // Collapse toggle for Current/Last Shift section
+  document.getElementById("current-shift-toggle").addEventListener("click", () => {
+    const btn = document.getElementById("current-shift-toggle");
+    const isCollapsed = currentShiftBodyWrapper.classList.toggle("collapsed");
+    btn.classList.toggle("collapsed", isCollapsed);
+    btn.setAttribute("aria-expanded", String(!isCollapsed));
+  });
+
+  // Collapse toggle for Previous Shifts section
+  document.getElementById("previous-shifts-toggle").addEventListener("click", () => {
+    const btn = document.getElementById("previous-shifts-toggle");
+    const isCollapsed = previousShiftsBodyWrapper.classList.toggle("collapsed");
+    btn.classList.toggle("collapsed", isCollapsed);
+    btn.setAttribute("aria-expanded", String(!isCollapsed));
+  });
+
   renderTimeEntries();
 }
 
@@ -315,6 +382,8 @@ if (typeof module !== "undefined" && module.exports) {
     tickClock,
     initTimeEntriesView,
     toLocalDateString,
-    getPreviousShiftsEntries
+    getPreviousShiftsEntries,
+    getLastShiftEntry,
+    buildLastShiftRow
   };
 }

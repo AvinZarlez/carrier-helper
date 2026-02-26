@@ -86,7 +86,9 @@ carrier-helper/
 
 #### time-entries.js
 - `handleClockButton()` — Clock in/out logic
-- `renderTimeEntries()` — Render the entries table
+- `renderTimeEntries()` — Render the entries table (shows "Current Shift" / "Last Shift" / hidden)
+- `getLastShiftEntry()` — Get the most recent completed entry
+- `getPreviousShiftsEntries()` — Get entries for the Previous Shifts section
 
 #### data-viewer.js
 - `renderDataViewer()` — Render read-only table
@@ -148,12 +150,23 @@ describe('functionName', () => {
 **ALWAYS keep documentation up to date when making changes:**
 
 1. Update relevant docs in `docs/` if changing user-facing behavior
-2. Update this file (`copilot-instructions.md`) if changing:
+2. Update `README.md` when features are added, removed, or moved
+3. Update this file (`copilot-instructions.md`) if changing:
    - File structure
    - Module responsibilities
    - Key functions
    - Development guidelines
-3. Update JSDoc comments in code files
+4. Update JSDoc comments in code files
+
+### Mobile & Responsive Design
+
+**ALWAYS ensure the application is viewable and functional on tiny mobile screens (320 px wide and up).**
+
+- Test every UI change at both desktop (960 px+) and mobile (≤ 400 px) viewport widths
+- Use `overflow-x: auto` on table wrappers (already in place) so tables scroll horizontally rather than overflow the screen
+- Use the existing responsive breakpoints in `css/style.css` (`@media (max-width: 600px)` and `@media (max-width: 400px)`) and extend them as needed for new UI elements
+- Prefer `flex-wrap: wrap` for button rows so they wrap gracefully on narrow screens
+- Avoid fixed pixel widths on interactive elements; prefer `max-width` or `width: 100%` patterns
 
 ### Cloud Sync Configuration
 
