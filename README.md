@@ -12,8 +12,9 @@ A simple web application designed to help mail carriers track their shifts and h
 - **Local storage** — all entries are saved directly in your browser; no server or login needed.
 - **Previous Shifts** — recent completed shifts shown for quick reference, alongside actions to edit or delete individual entries.
 - **Spreadsheet view** — every clock-in and clock-out entry is displayed in a table in the Data Viewer tab so you can review your full history at a glance.
-- **CSV export / import** — download all entries as a CSV file or import from a previously exported file to back up or restore your data.
-- **Cloud sync (optional)** — sign in with a free account to sync entries across all your devices via Firebase.
+- **Meta Data / Pay Scale** — store your USPS pay scale settings (base rate, overtime multipliers, night differential, Sunday premium, and thresholds) in the Meta Data sub-tab of the Data Viewer.
+- **CSV export / import** — export time entries for the current view, export metadata, or export all data at once. Import auto-detects the CSV type (time entries, metadata, or combined).
+- **Cloud sync (optional)** — sign in with a free account to sync entries and pay-scale settings across all your devices via Firebase.
 
 ## Documentation
 

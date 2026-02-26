@@ -12,12 +12,25 @@ Carrier Helper uses [Jest](https://jestjs.io/) for unit testing with jsdom for b
 
 ### Test Coverage
 
-Current coverage focuses on the core utility functions in `js/common.js`:
+Tests cover the core utility functions in `js/common.js` as well as export/import logic:
 
-- Storage operations
+- Storage operations (entries and metadata)
 - Date/time formatting
-- CSV parsing and generation
+- CSV parsing and generation (time entries, metadata, combined)
 - Entry merge logic
+- USPS pay scale metadata defaults and storage
+- CSV type detection (`detectCSVType`)
+- Export filtering (`filterEntriesByRange`, `getExportEntries`) — including selection-aware and date-range-aware export
+- Import round-trips for all three CSV formats
+- Merge vs. replace import modes
+
+### Test Files
+
+| File | What it tests |
+| --- | --- |
+| `tests/common.test.js` | Core utilities in `js/common.js` (storage, formatting, CSV) |
+| `tests/meta-data.test.js` | Metadata utilities in `js/common.js` (defaults, storage, CSV, type detection) |
+| `tests/export-import.test.js` | Export filtering logic and import/export round-trips for all CSV formats |
 
 ---
 

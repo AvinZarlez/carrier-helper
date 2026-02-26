@@ -688,16 +688,15 @@ dvDeselectAllBtn.addEventListener("click", clearSelection);
  * Entries outside the current view range are never included.
  */
 function exportToCSV() {
-  let viewStart, viewEnd, exclusiveEnd;
+  // Default to week mode bounds; override if a valid custom range is active
+  let viewStart = currentWeekStart;
+  let viewEnd = new Date(currentWeekStart);
+  viewEnd.setDate(viewEnd.getDate() + 7); // exclusive upper bound (same as renderDataViewer)
+  let exclusiveEnd = true;
   if (viewMode === "range" && customRangeStart && customRangeEnd) {
     viewStart = new Date(customRangeStart + "T00:00:00");
     viewEnd = new Date(customRangeEnd + "T23:59:59.999");
     exclusiveEnd = false;
-  } else {
-    viewStart = currentWeekStart;
-    viewEnd = new Date(currentWeekStart);
-    viewEnd.setDate(viewEnd.getDate() + 7); // exclusive upper bound (same as renderDataViewer)
-    exclusiveEnd = true;
   }
 
   const entries = getExportEntries(loadEntries(), selectedEntryIds, viewStart, viewEnd, exclusiveEnd);

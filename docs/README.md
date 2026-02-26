@@ -32,7 +32,8 @@ See the top of each file in `js/` for detailed documentation:
 
 - `js/common.js` — Shared utilities
 - `js/time-entries.js` — Time Entries view
-- `js/data-viewer.js` — Data Viewer view
+- `js/data-viewer.js` — Data Viewer view (sub-tabs, export, import)
+- `js/meta-data.js` — Meta Data view (USPS pay scale settings form)
 - `js/app.js` — Application bootstrap
 - `js/cloud-sync.js` — Firebase cloud sync
 - `js/firebase-config.js` — Firebase configuration
