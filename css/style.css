@@ -1,0 +1,239 @@
+/* ── Reset & base ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: #f0f4f8;
+  color: #1a202c;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ── */
+header {
+  background: #2b6cb0;
+  color: #fff;
+  padding: 1.5rem 2rem;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 2rem;
+  letter-spacing: 0.05em;
+}
+
+.subtitle {
+  margin-top: 0.25rem;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+/* ── Main layout ── */
+main {
+  flex: 1;
+  max-width: 960px;
+  width: 100%;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* ── Clock panel ── */
+.clock-panel {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.status-display {
+  font-size: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+#status-label {
+  font-weight: 600;
+  color: #4a5568;
+}
+
+.status-in {
+  color: #276749;
+  font-weight: 700;
+}
+
+.status-out {
+  color: #c53030;
+  font-weight: 700;
+}
+
+.current-time {
+  font-size: 3.5rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 300;
+  color: #2d3748;
+  letter-spacing: 0.04em;
+}
+
+/* ── Buttons ── */
+.btn {
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  padding: 0.75rem 2.5rem;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-in {
+  background: #276749;
+  color: #fff;
+}
+
+.btn-in:hover {
+  background: #2f855a;
+}
+
+.btn-out {
+  background: #c53030;
+  color: #fff;
+}
+
+.btn-out:hover {
+  background: #e53e3e;
+}
+
+.btn-clear {
+  background: #e2e8f0;
+  color: #4a5568;
+  font-size: 0.85rem;
+  padding: 0.4rem 1rem;
+}
+
+.btn-clear:hover {
+  background: #cbd5e0;
+}
+
+.btn-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #a0aec0;
+  font-size: 1rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.btn-delete:hover {
+  color: #c53030;
+}
+
+/* ── Entries panel ── */
+.entries-panel {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem 2rem;
+}
+
+.entries-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.25rem;
+}
+
+.entries-header h2 {
+  font-size: 1.25rem;
+  color: #2d3748;
+}
+
+/* ── Table ── */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+thead {
+  background: #ebf4ff;
+}
+
+th {
+  text-align: left;
+  padding: 0.65rem 0.75rem;
+  font-weight: 600;
+  color: #2b6cb0;
+  border-bottom: 2px solid #bee3f8;
+  white-space: nowrap;
+}
+
+td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+tbody tr:hover {
+  background: #f7fafc;
+}
+
+.duration-cell {
+  font-variant-numeric: tabular-nums;
+  color: #4a5568;
+}
+
+.pending-cell {
+  color: #a0aec0;
+  font-style: italic;
+}
+
+/* ── Empty state ── */
+.empty-msg {
+  text-align: center;
+  color: #a0aec0;
+  padding: 2rem 0;
+  font-size: 0.9rem;
+}
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .current-time {
+    font-size: 2.5rem;
+  }
+
+  .entries-panel {
+    padding: 1rem;
+  }
+
+  th, td {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+}

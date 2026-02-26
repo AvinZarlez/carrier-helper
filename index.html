@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carrier Helper</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Carrier Helper</h1>
+    <p class="subtitle">Track your mail carrier shifts with ease</p>
+  </header>
+
+  <main>
+    <section class="clock-panel">
+      <div class="status-display">
+        <span id="status-label">Status:</span>
+        <span id="status-value" class="status-out">Clocked Out</span>
+      </div>
+      <div class="current-time" id="current-time">--:--:--</div>
+      <button id="clock-btn" class="btn btn-in">Clock In</button>
+    </section>
+
+    <section class="entries-panel">
+      <div class="entries-header">
+        <h2>Time Entries</h2>
+        <button id="clear-btn" class="btn btn-clear">Clear All</button>
+      </div>
+
+      <div class="table-wrapper">
+        <table id="entries-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Date</th>
+              <th>Clock In</th>
+              <th>Clock Out</th>
+              <th>Duration</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="entries-body">
+            <!-- Rows injected by app.js -->
+          </tbody>
+        </table>
+        <p id="empty-msg" class="empty-msg">No entries yet. Press "Clock In" to start tracking.</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
