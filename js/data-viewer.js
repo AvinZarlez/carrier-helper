@@ -44,6 +44,12 @@ const dataViewerView = document.getElementById("data-viewer-view");
 const dvBody = document.getElementById("dv-body");
 const dvEmptyMsg = document.getElementById("dv-empty-msg");
 const exportBtn = document.getElementById("export-btn");
+const exportRangeBtn = document.getElementById("export-range-btn");
+const exportRangeForm = document.getElementById("export-range-form");
+const exportRangeStartEl = document.getElementById("export-range-start");
+const exportRangeEndEl = document.getElementById("export-range-end");
+const exportRangeConfirmBtn = document.getElementById("export-range-confirm-btn");
+const exportRangeCancelBtn = document.getElementById("export-range-cancel-btn");
 const importAddBtn = document.getElementById("import-add-btn");
 const importReplaceBtn = document.getElementById("import-replace-btn");
 const importFileInput = document.getElementById("import-file-input");
@@ -57,6 +63,16 @@ const dvNextWeekBtn = document.getElementById("dv-next-week");
 const dvWeekLabel = document.getElementById("dv-week-label");
 const dvDateJump = document.getElementById("dv-date-jump");
 const dvDateJumpBtn = document.getElementById("dv-date-jump-btn");
+const dvWeekNavRow = document.getElementById("dv-week-nav-row");
+
+// View mode toggle elements
+const dvModeWeekBtn = document.getElementById("dv-mode-week");
+const dvModeRangeBtn = document.getElementById("dv-mode-range");
+const dvCustomRangeRow = document.getElementById("dv-custom-range-row");
+const dvRangeStart = document.getElementById("dv-range-start");
+const dvRangeEnd = document.getElementById("dv-range-end");
+const dvRangeApplyBtn = document.getElementById("dv-range-apply-btn");
+const dvRangeLabel = document.getElementById("dv-range-label");
 
 // Multi-select elements
 const dvSelectionBanner = document.getElementById("dv-selection-banner");
@@ -107,8 +123,60 @@ function dvToLocalDateString(isoString) {
   return `${y}-${m}-${day}`;
 }
 
+/**
+ * Format a date range as a human-readable label.
+ * @param {Date} start - Start date
+ * @param {Date} end - End date
+ * @returns {string} Formatted label (e.g., "Feb 1 – Feb 28, 2026")
+ */
+function formatRangeLabel(start, end) {
+  const startStr = start.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const endStr = end.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return `${startStr} – ${endStr}`;
+}
+
+/**
+ * Convert a Date to a YYYY-MM-DD string suitable for a date input value.
+ * @param {Date} date
+ * @returns {string} Date string in YYYY-MM-DD format
+ */
+function dateToInputValue(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  return `${y}-${m}-${d}`;
+}
+
 /** The Monday of the currently-displayed week. */
 let currentWeekStart = getWeekStart(new Date());
+
+/** Current view mode: "week" or "range". */
+let viewMode = "week";
+
+/** Custom range start date string (YYYY-MM-DD), used when viewMode === "range". */
+let customRangeStart = "";
+
+/** Custom range end date string (YYYY-MM-DD), used when viewMode === "range". */
+let customRangeEnd = "";
+
+/**
+ * Get the start and end Date objects for the currently displayed view.
+ * In week mode, returns the Monday and Sunday of the current week.
+ * In range mode, returns the custom range dates (or null if not set).
+ * @returns {{start: Date, end: Date}}
+ */
+function getCurrentViewRange() {
+  if (viewMode === "range" && customRangeStart && customRangeEnd) {
+    return {
+      start: new Date(customRangeStart + "T00:00:00"),
+      end: new Date(customRangeEnd + "T00:00:00")
+    };
+  }
+  // Default: current week (Monday to Sunday inclusive)
+  const end = new Date(currentWeekStart);
+  end.setDate(end.getDate() + 6);
+  return { start: new Date(currentWeekStart), end };
+}
 
 // ── Multi-select State ──────────────────────────────────────────────────────
 
@@ -218,15 +286,38 @@ dataMgmtToggleBtn.addEventListener("click", () => {
 // ── Data Viewer Rendering ───────────────────────────────────────────────────
 
 /**
- * Render the Data Viewer table for the current week.
+ * Render the Data Viewer table for the current view (week or custom range).
  * Entries are grouped by date and displayed newest-first.
- * Shows week navigation controls.
+ * Shows week navigation controls in week mode, or date range inputs in range mode.
  */
 function renderDataViewer() {
   const entries = loadEntries();
 
-  // Update week label
-  dvWeekLabel.textContent = formatWeekLabel(currentWeekStart);
+  // Determine the view range and update the label
+  let viewStart, viewEnd, emptyRangeMsg;
+  if (viewMode === "range") {
+    if (customRangeStart && customRangeEnd) {
+      viewStart = new Date(customRangeStart + "T00:00:00");
+      viewEnd = new Date(customRangeEnd + "T23:59:59.999");
+      dvRangeLabel.textContent = formatRangeLabel(
+        new Date(customRangeStart + "T00:00:00"),
+        new Date(customRangeEnd + "T00:00:00")
+      );
+    } else {
+      dvRangeLabel.textContent = "Select a date range above";
+      dvBody.innerHTML = "";
+      dvEmptyMsg.style.display = "block";
+      updateSelectionBanner();
+      return;
+    }
+    emptyRangeMsg = "No entries in this date range.";
+  } else {
+    viewStart = currentWeekStart;
+    viewEnd = new Date(currentWeekStart);
+    viewEnd.setDate(viewEnd.getDate() + 7); // exclusive upper bound
+    dvWeekLabel.textContent = formatWeekLabel(currentWeekStart);
+    emptyRangeMsg = "No entries for this week.";
+  }
 
   if (entries.length === 0) {
     dvBody.innerHTML = "";
@@ -236,21 +327,17 @@ function renderDataViewer() {
 
   dvEmptyMsg.style.display = "none";
 
-  // Filter to the current week (Mon 00:00:00 to Sun 23:59:59 inclusive)
-  const weekEnd = new Date(currentWeekStart);
-  weekEnd.setDate(weekEnd.getDate() + 7); // exclusive upper bound
-
   // Reverse so newest entries appear first
-  const weekEntries = [...entries]
+  const viewEntries = [...entries]
     .reverse()
     .filter((e) => {
       const d = new Date(e.clockIn);
-      return d >= currentWeekStart && d < weekEnd;
+      return d >= viewStart && d < viewEnd;
     });
 
-  if (weekEntries.length === 0) {
+  if (viewEntries.length === 0) {
     dvBody.innerHTML =
-      `<tr><td colspan="8" class="empty-msg" style="padding:2rem 0;">No entries for this week.</td></tr>`;
+      `<tr><td colspan="8" class="empty-msg" style="padding:2rem 0;">${emptyRangeMsg}</td></tr>`;
     updateSelectionBanner();
     return;
   }
@@ -259,7 +346,7 @@ function renderDataViewer() {
   const rowNumMap = new Map(entries.map((e, i) => [e.id, i + 1]));
 
   let lastDate = "";
-  dvBody.innerHTML = weekEntries
+  dvBody.innerHTML = viewEntries
     .map((entry) => {
       const entryDateStr = dvToLocalDateString(entry.clockIn);
       const rowNum = rowNumMap.get(entry.id);
@@ -482,7 +569,58 @@ dvDateJump.addEventListener("keydown", (e) => {
   if (e.key === "Enter") jumpToDate();
 });
 
-// ── Multi-select Button Handlers ────────────────────────────────────────────
+// ── View Mode Toggle ────────────────────────────────────────────────────────
+
+/**
+ * Switch the data viewer between weekly mode and custom range mode.
+ * @param {string} mode - "week" or "range"
+ */
+function setViewMode(mode) {
+  viewMode = mode;
+  if (mode === "range") {
+    dvModeWeekBtn.classList.remove("active");
+    dvModeRangeBtn.classList.add("active");
+    dvWeekNavRow.style.display = "none";
+    dvCustomRangeRow.style.display = "flex";
+    // Pre-fill with current week range if no custom range set yet
+    if (!customRangeStart || !customRangeEnd) {
+      const range = getCurrentViewRange();
+      customRangeStart = dateToInputValue(range.start);
+      customRangeEnd = dateToInputValue(range.end);
+      dvRangeStart.value = customRangeStart;
+      dvRangeEnd.value = customRangeEnd;
+    }
+  } else {
+    dvModeRangeBtn.classList.remove("active");
+    dvModeWeekBtn.classList.add("active");
+    dvCustomRangeRow.style.display = "none";
+    dvWeekNavRow.style.display = "flex";
+  }
+  selectedEntryIds.clear();
+  renderDataViewer();
+}
+
+dvModeWeekBtn.addEventListener("click", () => setViewMode("week"));
+dvModeRangeBtn.addEventListener("click", () => setViewMode("range"));
+
+dvRangeApplyBtn.addEventListener("click", () => {
+  const startVal = dvRangeStart.value;
+  const endVal = dvRangeEnd.value;
+  if (!startVal || !endVal) return;
+  customRangeStart = startVal;
+  customRangeEnd = endVal;
+  selectedEntryIds.clear();
+  renderDataViewer();
+});
+
+dvRangeStart.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") dvRangeApplyBtn.click();
+});
+dvRangeEnd.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") dvRangeApplyBtn.click();
+});
+
+
 
 dvSelectAllBtn.addEventListener("click", () => {
   dvBody.querySelectorAll(".dv-row-checkbox").forEach((cb) => {
@@ -518,6 +656,73 @@ function exportToCSV() {
 }
 
 exportBtn.addEventListener("click", exportToCSV);
+
+// ── Export Date Range ───────────────────────────────────────────────────────
+
+/**
+ * Export entries within a user-specified date range to a CSV file.
+ */
+function exportRangeToCSV() {
+  const startVal = exportRangeStartEl.value;
+  const endVal = exportRangeEndEl.value;
+
+  if (!startVal || !endVal) {
+    alert("Please select both a start and end date.");
+    return;
+  }
+
+  const start = new Date(startVal + "T00:00:00");
+  const end = new Date(endVal + "T23:59:59.999");
+
+  if (start > end) {
+    alert("Start date must be before or equal to end date.");
+    return;
+  }
+
+  const entries = loadEntries().filter((e) => {
+    const d = new Date(e.clockIn);
+    return d >= start && d <= end;
+  });
+
+  if (entries.length === 0) {
+    alert("No entries found in the selected date range.");
+    return;
+  }
+
+  const csv = generateCSV(entries);
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `carrier-helper-${startVal}-to-${endVal}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/** Whether the export date range form is currently visible. */
+let exportRangeFormVisible = false;
+
+exportRangeBtn.addEventListener("click", () => {
+  exportRangeFormVisible = !exportRangeFormVisible;
+  if (!exportRangeFormVisible) {
+    exportRangeForm.style.display = "none";
+    return;
+  }
+  // Pre-fill with current view range
+  const range = getCurrentViewRange();
+  exportRangeStartEl.value = dateToInputValue(range.start);
+  exportRangeEndEl.value = dateToInputValue(range.end);
+  exportRangeForm.style.display = "block";
+});
+
+exportRangeConfirmBtn.addEventListener("click", exportRangeToCSV);
+
+exportRangeCancelBtn.addEventListener("click", () => {
+  exportRangeFormVisible = false;
+  exportRangeForm.style.display = "none";
+});
 
 // ── Delete All Local Data ───────────────────────────────────────────────────
 
@@ -608,13 +813,18 @@ if (typeof module !== "undefined" && module.exports) {
     showTab,
     renderDataViewer,
     exportToCSV,
+    exportRangeToCSV,
     openEditModal,
     closeEditModal,
     saveEditEntry,
     isoToDatetimeLocal,
     getWeekStart,
     formatWeekLabel,
+    formatRangeLabel,
+    dateToInputValue,
     dvToLocalDateString,
+    getCurrentViewRange,
+    setViewMode,
     clearSelection,
     deleteSelected,
     updateSelectionBanner
