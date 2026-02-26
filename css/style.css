@@ -574,14 +574,11 @@ tbody tr:hover {
 }
 
 /* ── Data management panel ── */
-.data-mgmt-panel {
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  padding: 1.5rem 2rem;
+.data-mgmt-sections {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  margin-top: 1.25rem;
 }
 
 .data-mgmt-section h3 {

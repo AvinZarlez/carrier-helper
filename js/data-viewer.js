@@ -48,6 +48,8 @@ const importAddBtn = document.getElementById("import-add-btn");
 const importReplaceBtn = document.getElementById("import-replace-btn");
 const importFileInput = document.getElementById("import-file-input");
 const deleteAllBtn = document.getElementById("delete-all-btn");
+const dataMgmtBodyWrapper = document.getElementById("data-mgmt-body");
+const dataMgmtToggleBtn = document.getElementById("data-mgmt-toggle");
 
 // Week navigation elements
 const dvPrevWeekBtn = document.getElementById("dv-prev-week");
@@ -204,6 +206,14 @@ function showTab(tab) {
 
 navTimeEntries.addEventListener("click", () => showTab("time-entries"));
 navDataViewer.addEventListener("click", () => showTab("data-viewer"));
+
+// ── Data Management Collapse Toggle ─────────────────────────────────────────
+
+dataMgmtToggleBtn.addEventListener("click", () => {
+  const isCollapsed = dataMgmtBodyWrapper.classList.toggle("collapsed");
+  dataMgmtToggleBtn.classList.toggle("collapsed", isCollapsed);
+  dataMgmtToggleBtn.setAttribute("aria-expanded", String(!isCollapsed));
+});
 
 // ── Data Viewer Rendering ───────────────────────────────────────────────────
 
