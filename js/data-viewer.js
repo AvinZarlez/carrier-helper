@@ -49,6 +49,58 @@ const importReplaceBtn = document.getElementById("import-replace-btn");
 const importFileInput = document.getElementById("import-file-input");
 const deleteAllBtn = document.getElementById("delete-all-btn");
 
+// Week navigation elements
+const dvPrevWeekBtn = document.getElementById("dv-prev-week");
+const dvNextWeekBtn = document.getElementById("dv-next-week");
+const dvWeekLabel = document.getElementById("dv-week-label");
+const dvDateJump = document.getElementById("dv-date-jump");
+const dvDateJumpBtn = document.getElementById("dv-date-jump-btn");
+
+// ── Week Navigation Helpers ─────────────────────────────────────────────────
+
+/**
+ * Get the Monday of the week containing the given date (local time).
+ * @param {Date} date
+ * @returns {Date} Monday at 00:00:00 local time
+ */
+function getWeekStart(date) {
+  const d = new Date(date);
+  const day = d.getDay(); // 0=Sun, 1=Mon, …
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+/**
+ * Format a week range as a human-readable label (e.g., "Feb 23 – Mar 1, 2026").
+ * @param {Date} weekStart - Monday of the week
+ * @returns {string} Formatted label
+ */
+function formatWeekLabel(weekStart) {
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  const startStr = weekStart.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  const endStr = weekEnd.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  return `${startStr} – ${endStr}`;
+}
+
+/**
+ * Return a local date string "YYYY-MM-DD" for comparison purposes.
+ * @param {string} isoString - ISO-8601 timestamp
+ * @returns {string} Local date string
+ */
+function dvToLocalDateString(isoString) {
+  const d = new Date(isoString);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+/** The Monday of the currently-displayed week. */
+let currentWeekStart = getWeekStart(new Date());
+
 // ── Tab Navigation ──────────────────────────────────────────────────────────
 
 /**
@@ -76,11 +128,15 @@ navDataViewer.addEventListener("click", () => showTab("data-viewer"));
 // ── Data Viewer Rendering ───────────────────────────────────────────────────
 
 /**
- * Render the Data Viewer table with all entries.
- * Shows entries with edit and delete action buttons.
+ * Render the Data Viewer table for the current week.
+ * Entries are grouped by date and displayed newest-first.
+ * Shows week navigation controls.
  */
 function renderDataViewer() {
   const entries = loadEntries();
+
+  // Update week label
+  dvWeekLabel.textContent = formatWeekLabel(currentWeekStart);
 
   if (entries.length === 0) {
     dvBody.innerHTML = "";
@@ -89,10 +145,33 @@ function renderDataViewer() {
   }
 
   dvEmptyMsg.style.display = "none";
-  dvBody.innerHTML = [...entries]
+
+  // Filter to the current week (Mon 00:00:00 to Sun 23:59:59 inclusive)
+  const weekEnd = new Date(currentWeekStart);
+  weekEnd.setDate(weekEnd.getDate() + 7); // exclusive upper bound
+
+  // Reverse so newest entries appear first
+  const weekEntries = [...entries]
     .reverse()
-    .map((entry, idx) => {
-      const rowNum = entries.length - idx;
+    .filter((e) => {
+      const d = new Date(e.clockIn);
+      return d >= currentWeekStart && d < weekEnd;
+    });
+
+  if (weekEntries.length === 0) {
+    dvBody.innerHTML =
+      `<tr><td colspan="7" class="empty-msg" style="padding:2rem 0;">No entries for this week.</td></tr>`;
+    return;
+  }
+
+  // Pre-build a map of entry id → 1-based row number (based on sorted order)
+  const rowNumMap = new Map(entries.map((e, i) => [e.id, i + 1]));
+
+  let lastDate = "";
+  dvBody.innerHTML = weekEntries
+    .map((entry) => {
+      const entryDateStr = dvToLocalDateString(entry.clockIn);
+      const rowNum = rowNumMap.get(entry.id);
       const date = formatDate(entry.clockIn);
       const clockIn = formatTime(entry.clockIn);
       const clockOut = entry.clockOut ? formatTime(entry.clockOut) : "—";
@@ -100,7 +179,13 @@ function renderDataViewer() {
       const notes = entry.notes
         ? `<span class="notes-cell" title="${entry.notes.replace(/"/g, '&quot;')}">${entry.notes}</span>`
         : `<span class="pending-cell">—</span>`;
-      return `<tr>
+
+      let html = "";
+      if (entryDateStr !== lastDate) {
+        lastDate = entryDateStr;
+        html += `<tr class="date-group-header"><td colspan="7">${date}</td></tr>`;
+      }
+      html += `<tr>
       <td>${rowNum}</td>
       <td>${date}</td>
       <td>${clockIn}</td>
@@ -112,6 +197,7 @@ function renderDataViewer() {
         <button class="btn-delete" data-delete-id="${entry.id}" title="Delete entry">🗑</button>
       </td>
     </tr>`;
+      return html;
     })
     .join("");
 }
@@ -227,6 +313,38 @@ function saveEditEntry() {
   if (typeof renderTimeEntries === "function") renderTimeEntries();
 }
 
+// ── Week Navigation Event Handlers ─────────────────────────────────────────
+
+dvPrevWeekBtn.addEventListener("click", () => {
+  const d = new Date(currentWeekStart);
+  d.setDate(d.getDate() - 7);
+  currentWeekStart = d;
+  renderDataViewer();
+});
+
+dvNextWeekBtn.addEventListener("click", () => {
+  const d = new Date(currentWeekStart);
+  d.setDate(d.getDate() + 7);
+  currentWeekStart = d;
+  renderDataViewer();
+});
+
+function jumpToDate() {
+  const val = dvDateJump.value;
+  if (!val) return;
+  // Parse YYYY-MM-DD from the date input (always in this format) without
+  // relying on string concatenation to avoid timezone ambiguity.
+  const [y, mo, dy] = val.split("-").map(Number);
+  const d = new Date(y, mo - 1, dy, 12, 0, 0);
+  currentWeekStart = getWeekStart(d);
+  renderDataViewer();
+}
+
+dvDateJumpBtn.addEventListener("click", jumpToDate);
+dvDateJump.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") jumpToDate();
+});
+
 // ── Export ──────────────────────────────────────────────────────────────────
 
 /**
@@ -341,6 +459,9 @@ if (typeof module !== "undefined" && module.exports) {
     openEditModal,
     closeEditModal,
     saveEditEntry,
-    isoToDatetimeLocal
+    isoToDatetimeLocal,
+    getWeekStart,
+    formatWeekLabel,
+    dvToLocalDateString
   };
 }
