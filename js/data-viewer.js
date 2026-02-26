@@ -33,7 +33,7 @@
 /* global validateNoOverlap, validateSingleOpenEntry */
 /* global loadMetaData, saveMetaData, generateMetaDataCSV, parseMetaDataCSV */
 /* global detectCSVType, generateAllDataCSV, parseAllDataCSV, renderMetaDataForm */
-/* global filterEntriesByRange, getExportEntries */
+/* global getExportEntries */
 
 // ── DOM References ──────────────────────────────────────────────────────────
 

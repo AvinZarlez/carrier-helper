@@ -121,9 +121,13 @@ carrier-helper/
 ### Making Changes
 
 1. **Identify the correct file** — Use the module responsibilities table above
-2. **Run tests before and after** — `npm test`
-3. **Test in browser** — Start a local server and verify UI
-4. **Update documentation** — If changing behavior or adding features
+2. **Run lint before and after** — `npm run lint` (catches unused variables, syntax errors, style issues)
+3. **Run tests before and after** — `npm test`
+4. **Test in browser** — Start a local server and verify UI
+5. **Update documentation** — If changing behavior or adding features
+
+> **Important:** Always run both `npm run lint` and `npm test` locally before pushing.
+> CI runs both checks on every PR and will fail if either is broken.
 
 ### Adding New Features
 
@@ -138,6 +142,10 @@ carrier-helper/
 - Keep DOM references at the top of view files
 - Export functions for testing via `module.exports` check
 - No external dependencies except Firebase (which is optional)
+- **`/* global */` comments**: only declare globals that are **directly called** in that file.
+  Listing a global that is never referenced will trigger ESLint's `no-unused-vars` rule.
+  Example: if `common.js` exports both `filterEntriesByRange` and `getExportEntries` but
+  a view file only calls `getExportEntries`, only `getExportEntries` goes in the `/* global */` comment.
 
 ## Testing
 
