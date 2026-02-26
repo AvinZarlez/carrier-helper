@@ -10,45 +10,164 @@
   <header>
     <h1>Carrier Helper</h1>
     <p class="subtitle">Track your mail carrier shifts with ease</p>
+
+    <nav class="view-nav">
+      <button id="nav-time-entries" class="nav-btn active">Time Entries</button>
+      <button id="nav-data-viewer"  class="nav-btn">Data Viewer</button>
+    </nav>
+
+    <div class="cloud-sync-bar">
+      <button
+        id="cloudSyncLoginBtn"
+        class="btn-cloud-sync"
+        style="display: none"
+        onclick="CloudSyncModule.openAuthModal()"
+      >☁️ Sign In to Sync</button>
+      <div id="cloudSyncUserStatus" class="cloud-user-status" style="display: none">
+        <span id="cloudSyncUserEmail" class="user-email"></span>
+        <span id="syncStatusIndicator" class="sync-status" style="display: none"></span>
+        <button onclick="CloudSyncModule.signOut()" class="btn-cloud-signout">Sign Out</button>
+      </div>
+      <div id="syncErrorDetail" class="sync-error-detail" style="display: none"></div>
+    </div>
   </header>
 
+  <!-- Cloud Sync Login Modal -->
+  <div id="cloudSyncModal" class="modal" style="display: none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>☁️ Cloud Sync</h3>
+        <button onclick="CloudSyncModule.closeAuthModal()" class="modal-close" title="Close">✕</button>
+      </div>
+      <p class="modal-description">
+        Sign in to sync your time entries across all your browsers and devices automatically.
+      </p>
+      <div class="form-group">
+        <label for="authEmail">Email:</label>
+        <input type="email" id="authEmail" class="auth-input" placeholder="you@example.com" />
+      </div>
+      <div class="form-group">
+        <label for="authPassword">Password:</label>
+        <input type="password" id="authPassword" class="auth-input" placeholder="Password" />
+      </div>
+      <div id="authError" class="auth-error" style="display: none"></div>
+      <div class="auth-actions">
+        <button id="authSignInBtn" onclick="CloudSyncModule.handleSignIn()" class="btn-primary">Sign In</button>
+        <button id="authSignUpBtn" onclick="CloudSyncModule.handleSignUp()" class="btn-secondary">Create Account</button>
+      </div>
+      <p class="auth-note">
+        Your data is stored privately in the cloud and only accessible with your account.
+      </p>
+    </div>
+  </div>
+
   <main>
-    <section class="clock-panel">
-      <div class="status-display">
-        <span id="status-label">Status:</span>
-        <span id="status-value" class="status-out">Clocked Out</span>
-      </div>
-      <div class="current-time" id="current-time">--:--:--</div>
-      <button id="clock-btn" class="btn btn-in">Clock In</button>
-    </section>
+    <!-- Time Entries View -->
+    <div id="time-entries-view">
+      <section class="clock-panel">
+        <div class="status-display">
+          <span id="status-label">Status:</span>
+          <span id="status-value" class="status-out">Clocked Out</span>
+        </div>
+        <div class="current-time" id="current-time">--:--:--</div>
+        <button id="clock-btn" class="btn btn-in">Clock In</button>
+      </section>
 
-    <section class="entries-panel">
-      <div class="entries-header">
-        <h2>Time Entries</h2>
-        <button id="clear-btn" class="btn btn-clear">Clear All</button>
-      </div>
+      <section class="entries-panel">
+        <div class="entries-header">
+          <h2>Time Entries</h2>
+          <button id="clear-btn" class="btn btn-clear">Clear All</button>
+        </div>
 
-      <div class="table-wrapper">
-        <table id="entries-table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Date</th>
-              <th>Clock In</th>
-              <th>Clock Out</th>
-              <th>Duration</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="entries-body">
-            <!-- Rows injected by app.js -->
-          </tbody>
-        </table>
-        <p id="empty-msg" class="empty-msg">No entries yet. Press "Clock In" to start tracking.</p>
-      </div>
-    </section>
+        <div class="table-wrapper">
+          <table id="entries-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Clock In</th>
+                <th>Clock Out</th>
+                <th>Duration</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="entries-body">
+              <!-- Rows injected by app.js -->
+            </tbody>
+          </table>
+          <p id="empty-msg" class="empty-msg">No entries yet. Press "Clock In" to start tracking.</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- Data Viewer View -->
+    <div id="data-viewer-view" style="display: none">
+      <section class="entries-panel">
+        <div class="entries-header">
+          <h2>All Time Entries</h2>
+        </div>
+
+        <div class="table-wrapper">
+          <table id="dv-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Date</th>
+                <th>Clock In</th>
+                <th>Clock Out</th>
+                <th>Duration</th>
+              </tr>
+            </thead>
+            <tbody id="dv-body">
+              <!-- Rows injected by app.js -->
+            </tbody>
+          </table>
+          <p id="dv-empty-msg" class="empty-msg">No entries yet.</p>
+        </div>
+      </section>
+
+      <section class="data-mgmt-panel">
+        <div class="data-mgmt-section">
+          <h3>Export Data</h3>
+          <button id="export-btn" class="btn btn-export">📥 Export All to CSV</button>
+          <p class="mgmt-note">Download all time entries as a CSV file.</p>
+        </div>
+
+        <div class="data-mgmt-section">
+          <h3>Import Data</h3>
+          <div class="import-buttons">
+            <button id="import-add-btn" class="btn btn-import-add">
+              <span class="btn-icon">➕</span>
+              <span class="btn-text">
+                <strong>Add to Existing</strong>
+                <small>Merge with current data</small>
+              </span>
+            </button>
+            <button id="import-replace-btn" class="btn btn-import-replace">
+              <span class="btn-icon">🔄</span>
+              <span class="btn-text">
+                <strong>Replace All</strong>
+                <small>Delete &amp; replace all data</small>
+              </span>
+            </button>
+          </div>
+          <p class="mgmt-note">
+            <strong>Add to Existing:</strong> Merges the CSV with your current entries (duplicates skipped).<br>
+            <strong>Replace All:</strong> ⚠️ Permanently deletes all current data and replaces it with the CSV file.
+          </p>
+          <!-- Hidden file input for import -->
+          <input type="file" id="import-file-input" accept=".csv" style="display: none" />
+        </div>
+      </section>
+    </div>
   </main>
 
   <script src="js/app.js"></script>
+  <!-- Firebase SDK (only active when firebase-config.js has a non-empty apiKey) -->
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+  <script src="js/firebase-config.js"></script>
+  <script src="js/cloud-sync.js"></script>
 </body>
 </html>
