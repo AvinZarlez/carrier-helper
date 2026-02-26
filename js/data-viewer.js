@@ -1,14 +1,16 @@
 /**
  * data-viewer.js — Data Viewer View for Carrier Helper
  *
- * This file manages the Data Viewer view which provides a read-only
- * spreadsheet view of all entries and data import/export functionality.
+ * This file manages the Data Viewer view which provides a
+ * spreadsheet view of all entries with edit/delete capabilities,
+ * and data import/export functionality.
  *
  * RESPONSIBILITIES:
  * - Data Viewer table rendering
  * - Export to CSV functionality
  * - Import from CSV (both modes: add/merge and replace)
  * - Tab navigation between views
+ * - Edit entry modal (shared with Time Entries view)
  *
  * DEPENDENCIES:
  * - common.js (must be loaded first for shared utilities)
@@ -18,6 +20,7 @@
  * - Import/export event handlers
  * - Tab switching logic
  * - CSV file handling
+ * - Edit entry modal logic
  *
  * WHAT DOES NOT BELONG HERE:
  * - Time Entries specific logic (see time-entries.js)
@@ -69,7 +72,7 @@ navDataViewer.addEventListener("click", () => showTab("data-viewer"));
 
 /**
  * Render the Data Viewer table with all entries.
- * Shows a read-only view without action buttons.
+ * Shows entries with edit and delete action buttons.
  */
 function renderDataViewer() {
   const entries = loadEntries();
@@ -89,15 +92,119 @@ function renderDataViewer() {
       const clockIn = formatTime(entry.clockIn);
       const clockOut = entry.clockOut ? formatTime(entry.clockOut) : "—";
       const dur = formatDuration(entry.clockIn, entry.clockOut) || "—";
+      const notes = entry.notes
+        ? `<span class="notes-cell" title="${entry.notes.replace(/"/g, '&quot;')}">${entry.notes}</span>`
+        : `<span class="pending-cell">—</span>`;
       return `<tr>
       <td>${rowNum}</td>
       <td>${date}</td>
       <td>${clockIn}</td>
       <td>${clockOut}</td>
       <td>${dur}</td>
+      <td>${notes}</td>
+      <td>
+        <button class="btn-edit" data-edit-id="${entry.id}" title="Edit entry">✏️</button>
+        <button class="btn-delete" data-delete-id="${entry.id}" title="Delete entry">🗑</button>
+      </td>
     </tr>`;
     })
     .join("");
+}
+
+// ── Data Viewer Row Actions ─────────────────────────────────────────────────
+
+dvBody.addEventListener("click", (event) => {
+  const deleteBtn = event.target.closest("[data-delete-id]");
+  if (deleteBtn) {
+    if (!confirm("Delete this entry?")) return;
+    const id = deleteBtn.dataset.deleteId;
+    saveEntries(loadEntries().filter((e) => e.id !== id));
+    renderDataViewer();
+    if (typeof renderTimeEntries === "function") renderTimeEntries();
+    return;
+  }
+
+  const editBtn = event.target.closest("[data-edit-id]");
+  if (!editBtn) return;
+  openEditModal(editBtn.dataset.editId);
+});
+
+// ── Edit Entry Modal ────────────────────────────────────────────────────────
+
+/** Currently-edited entry id */
+let currentEditId = null;
+
+/**
+ * Convert an ISO timestamp to a value suitable for a datetime-local input.
+ * Uses manual local-time construction (not toISOString) because datetime-local
+ * inputs expect local time, not UTC.
+ * @param {string} iso - ISO-8601 timestamp
+ * @returns {string} Local datetime string (YYYY-MM-DDTHH:MM:SS)
+ */
+function isoToDatetimeLocal(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+}
+
+/**
+ * Open the edit entry modal pre-filled with the given entry's data.
+ * @param {string} entryId - The id of the entry to edit
+ */
+function openEditModal(entryId) {
+  const entry = loadEntries().find((e) => e.id === entryId);
+  if (!entry) return;
+
+  currentEditId = entryId;
+  document.getElementById("editClockIn").value = isoToDatetimeLocal(entry.clockIn);
+  document.getElementById("editClockOut").value = isoToDatetimeLocal(entry.clockOut);
+  document.getElementById("editNotes").value = entry.notes || "";
+  document.getElementById("editError").style.display = "none";
+  document.getElementById("editEntryModal").style.display = "flex";
+}
+
+/**
+ * Close the edit entry modal without saving.
+ */
+function closeEditModal() {
+  document.getElementById("editEntryModal").style.display = "none";
+  currentEditId = null;
+}
+
+/**
+ * Save the currently-edited entry after validating.
+ * Shows an error message if the entry is invalid.
+ */
+function saveEditEntry() {
+  const clockInLocal = document.getElementById("editClockIn").value;
+  const clockOutLocal = document.getElementById("editClockOut").value;
+  const notes = document.getElementById("editNotes").value;
+  const errorEl = document.getElementById("editError");
+
+  const clockIn = clockInLocal ? new Date(clockInLocal).toISOString() : "";
+  const clockOut = clockOutLocal ? new Date(clockOutLocal).toISOString() : null;
+
+  const updatedEntry = { id: currentEditId, clockIn, clockOut, notes };
+
+  if (!validateEntry(updatedEntry)) {
+    errorEl.textContent =
+      "Invalid entry: clock-in must be a valid time, and clock-out (if set) must be after clock-in.";
+    errorEl.style.display = "block";
+    return;
+  }
+
+  errorEl.style.display = "none";
+  const entries = loadEntries();
+  const idx = entries.findIndex((e) => e.id === currentEditId);
+  if (idx !== -1) {
+    entries[idx] = updatedEntry;
+    saveEntries(entries);
+  }
+
+  closeEditModal();
+  renderDataViewer();
+  if (typeof renderTimeEntries === "function") renderTimeEntries();
 }
 
 // ── Export ──────────────────────────────────────────────────────────────────
@@ -188,6 +295,10 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports = {
     showTab,
     renderDataViewer,
-    exportToCSV
+    exportToCSV,
+    openEditModal,
+    closeEditModal,
+    saveEditEntry,
+    isoToDatetimeLocal
   };
 }

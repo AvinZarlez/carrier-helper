@@ -88,6 +88,7 @@
                 <th>Clock In</th>
                 <th>Clock Out</th>
                 <th>Duration</th>
+                <th>Notes</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -116,6 +117,8 @@
                 <th>Clock In</th>
                 <th>Clock Out</th>
                 <th>Duration</th>
+                <th>Notes</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="dv-body">
@@ -161,6 +164,33 @@
       </section>
     </div>
   </main>
+
+  <!-- Edit Entry Modal -->
+  <div id="editEntryModal" class="modal" style="display: none">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>✏️ Edit Entry</h3>
+        <button onclick="closeEditModal()" class="modal-close" title="Close">✕</button>
+      </div>
+      <div class="form-group">
+        <label for="editClockIn">Clock In:</label>
+        <input type="datetime-local" id="editClockIn" class="auth-input" step="1" />
+      </div>
+      <div class="form-group">
+        <label for="editClockOut">Clock Out <span class="auth-note">(leave empty if in progress)</span>:</label>
+        <input type="datetime-local" id="editClockOut" class="auth-input" step="1" />
+      </div>
+      <div class="form-group">
+        <label for="editNotes">Notes:</label>
+        <textarea id="editNotes" class="auth-input edit-textarea" rows="3" placeholder="Optional notes…"></textarea>
+      </div>
+      <div id="editError" class="auth-error" style="display: none"></div>
+      <div class="auth-actions">
+        <button id="editSaveBtn" onclick="saveEditEntry()" class="btn-primary">Save</button>
+        <button onclick="closeEditModal()" class="btn-secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Application Scripts (load order matters) -->
   <script src="js/common.js"></script>
