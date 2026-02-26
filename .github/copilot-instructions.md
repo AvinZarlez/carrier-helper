@@ -86,7 +86,9 @@ carrier-helper/
 
 #### time-entries.js
 - `handleClockButton()` — Clock in/out logic
-- `renderTimeEntries()` — Render the entries table
+- `renderTimeEntries()` — Render the entries table (shows "Current Shift" / "Last Shift" / hidden)
+- `getLastShiftEntry()` — Get the most recent completed entry
+- `getPreviousShiftsEntries()` — Get entries for the Previous Shifts section
 
 #### data-viewer.js
 - `renderDataViewer()` — Render read-only table
