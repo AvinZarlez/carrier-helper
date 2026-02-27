@@ -44,6 +44,7 @@ const dvNextWeekBtn = document.getElementById("dv-next-week");
 const dvWeekLabel = document.getElementById("dv-week-label");
 const dvDateJump = document.getElementById("dv-date-jump");
 const dvDateJumpBtn = document.getElementById("dv-date-jump-btn");
+const dvThisWeekBtn = document.getElementById("dv-this-week-btn");
 const dvWeekNavRow = document.getElementById("dv-week-nav-row");
 
 // View mode toggle elements
@@ -62,6 +63,7 @@ const dvDownloadSelectedBtn = document.getElementById("dv-download-selected-btn"
 const dvDeleteSelectedBtn = document.getElementById("dv-delete-selected-btn");
 const dvDeselectAllBtn = document.getElementById("dv-deselect-all-btn");
 const dvSelectAllBtn = document.getElementById("dv-select-all-btn");
+const dvSelectAllCheckbox = document.getElementById("dv-select-all-checkbox");
 
 // ── Week Navigation Helpers ─────────────────────────────────────────────────
 
@@ -201,6 +203,30 @@ function updateDayCheckboxStates() {
       dayCheckbox.indeterminate = true;
     }
   });
+  updateSelectAllCheckboxState();
+}
+
+/**
+ * Sync the header "select all" checkbox state based on the current row selection.
+ */
+function updateSelectAllCheckboxState() {
+  const allCbs = dvBody.querySelectorAll(".dv-row-checkbox");
+  if (allCbs.length === 0) {
+    dvSelectAllCheckbox.checked = false;
+    dvSelectAllCheckbox.indeterminate = false;
+    return;
+  }
+  const checkedCount = Array.from(allCbs).filter((cb) => cb.checked).length;
+  if (checkedCount === 0) {
+    dvSelectAllCheckbox.checked = false;
+    dvSelectAllCheckbox.indeterminate = false;
+  } else if (checkedCount === allCbs.length) {
+    dvSelectAllCheckbox.checked = true;
+    dvSelectAllCheckbox.indeterminate = false;
+  } else {
+    dvSelectAllCheckbox.checked = false;
+    dvSelectAllCheckbox.indeterminate = true;
+  }
 }
 
 /**
@@ -442,6 +468,12 @@ dvDateJump.addEventListener("keydown", (e) => {
   if (e.key === "Enter") jumpToDate();
 });
 
+dvThisWeekBtn.addEventListener("click", () => {
+  selectedEntryIds.clear();
+  currentWeekStart = getWeekStart(new Date());
+  renderDataViewer();
+});
+
 // ── View Mode Toggle ────────────────────────────────────────────────────────
 
 /**
@@ -500,6 +532,21 @@ dvSelectAllBtn.addEventListener("click", () => {
     cb.checked = true;
     selectedEntryIds.add(cb.dataset.id);
     cb.closest("tr").classList.add("dv-row-selected");
+  });
+  updateDayCheckboxStates();
+  updateSelectionBanner();
+});
+
+dvSelectAllCheckbox.addEventListener("change", () => {
+  const checked = dvSelectAllCheckbox.checked;
+  dvBody.querySelectorAll(".dv-row-checkbox").forEach((cb) => {
+    cb.checked = checked;
+    if (checked) {
+      selectedEntryIds.add(cb.dataset.id);
+    } else {
+      selectedEntryIds.delete(cb.dataset.id);
+    }
+    cb.closest("tr").classList.toggle("dv-row-selected", checked);
   });
   updateDayCheckboxStates();
   updateSelectionBanner();
