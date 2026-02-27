@@ -16,12 +16,21 @@ carrier-helper/
 ├── css/
 │   └── style.css       # Application styles
 ├── js/
-│   └── app.js          # Clock-in/out logic and localStorage helpers
+│   ├── common.js       # Shared utilities (storage, formatting, CSV, pay calculations)
+│   ├── time-entries.js # Time Entries view (clock in/out, entries table)
+│   ├── data-viewer.js  # Data Viewer view (export/import, tab navigation)
+│   ├── meta-data.js    # Meta Data view (USPS pay scale settings)
+│   ├── hours-view.js   # Hours View (weekly/monthly/yearly summaries)
+│   ├── app.js          # Application bootstrap and URL parameter handling
+│   ├── firebase-config.js # Firebase configuration (empty by default)
+│   └── cloud-sync.js   # Firebase cloud sync module
 ├── docs/               # Technical documentation (you are here)
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml  # GitHub Actions workflow that publishes the site
-└── .vscode/            # VSCode editor settings for local development
+│       ├── deploy.yml  # GitHub Actions workflow that publishes the site
+│       ├── lint.yml    # ESLint + markdownlint
+│       └── test.yml    # Unit test workflow
+└── tests/              # Jest unit tests
 ```
 
 ### Deployment Pipeline
@@ -105,4 +114,4 @@ Then open `http://localhost:5500` in your browser.
 
 ## Customising the Site
 
-All application logic lives in `js/app.js` and all styles in `css/style.css`. The entry point is `index.html`. No build tools or package managers are required.
+Application logic is split across several files in `js/` (see the repository structure above) and all styles live in `css/style.css`. The entry point is `index.html`. No build tools or package managers are required.

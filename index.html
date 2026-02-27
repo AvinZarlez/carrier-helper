@@ -15,6 +15,7 @@
       <button id="nav-time-entries" class="nav-btn active">Time Entries</button>
       <button id="nav-hours-view"   class="nav-btn">Hours View</button>
       <button id="nav-data-viewer"  class="nav-btn">Data Viewer</button>
+      <button id="nav-about"        class="nav-btn">About</button>
     </nav>
 
     <div class="cloud-sync-bar">
@@ -421,6 +422,118 @@
             </div>
           </div>
         </div>
+      </section>
+    </div>
+
+    <!-- About View -->
+    <div id="about-view" style="display: none">
+      <section class="entries-panel about-panel">
+        <h2>ℹ️ About Carrier Helper</h2>
+        <p class="about-intro">
+          Carrier Helper is a free, no-account-required time tracker built for mail carriers.
+          Clock in and out with one tap, then see exactly how many hours you worked and what
+          you earned — right in your browser, on any device.
+        </p>
+
+        <details class="about-section" open>
+          <summary>🕐 How to Use</summary>
+          <div class="about-details-body">
+            <ol>
+              <li>Press <strong>Clock In</strong> when your shift starts.</li>
+              <li>Press <strong>Clock Out</strong> when it ends.</li>
+              <li>Head to <strong>Hours View</strong> to see your hours and estimated pay.</li>
+            </ol>
+            <p>Your data is saved automatically in your browser — no sign-in required.</p>
+          </div>
+        </details>
+
+        <details class="about-section" open>
+          <summary>📊 Features</summary>
+          <div class="about-details-body">
+            <ul>
+              <li><strong>One-Tap Time Tracking</strong> — Clock In / Clock Out with a single button press.</li>
+              <li><strong>Hours View</strong> — Weekly, monthly, and yearly summaries with breakdowns for base hours, overtime, penalty overtime, night differential, and Sunday premium.</li>
+              <li><strong>Pay Estimates</strong> — Configure your USPS pay rate in the Meta Data settings and see estimated earnings.</li>
+              <li><strong>Data Viewer</strong> — Browse all your entries in a read-only spreadsheet view with week or custom-range navigation.</li>
+              <li><strong>CSV Export / Import</strong> — Back up your data or move it between browsers.</li>
+              <li><strong>Cloud Sync</strong> — Optionally connect a Firebase account for real-time sync across all your devices.</li>
+              <li><strong>Works Everywhere</strong> — Fully responsive, from a 320 px phone to a widescreen desktop.</li>
+            </ul>
+          </div>
+        </details>
+
+        <details class="about-section" open>
+          <summary>💾 Your Data</summary>
+          <div class="about-details-body">
+            <p>
+              All data is stored locally in your browser's storage. Nothing is sent to a server
+              unless you opt in to Cloud Sync. You can export everything as a CSV file at any
+              time from the <strong>Data Viewer</strong> tab.
+            </p>
+          </div>
+        </details>
+
+        <details class="about-section">
+          <summary>⚡ Quick Clock-In / Clock-Out Shortcuts</summary>
+          <div class="about-details-body">
+            <p>
+              You can create home-screen or bookmark shortcuts that automatically clock you
+              in or out when opened — no need to tap any buttons.
+            </p>
+            <p>This works by adding a special parameter to the page URL:</p>
+            <ul>
+              <li><code>?clock-in=true</code> — Automatically clocks you in when the page loads.</li>
+              <li><code>?clock-out=true</code> — Automatically clocks you out when the page loads.</li>
+            </ul>
+            <p>
+              If you are already clocked in, the clock-in shortcut does nothing (and vice versa),
+              so it is always safe to tap.
+            </p>
+
+            <h4>📱 Create a Shortcut on iPhone / iPad (Safari)</h4>
+            <ol>
+              <li>Open Safari and navigate to:<br>
+                <code>https://avinzarlez.github.io/carrier-helper/?clock-in=true</code></li>
+              <li>Tap the <strong>Share</strong> button (square with an arrow).</li>
+              <li>Scroll down and tap <strong>Add to Home Screen</strong>.</li>
+              <li>Name it something like <strong>"Clock In"</strong> and tap <strong>Add</strong>.</li>
+              <li>Repeat with <code>?clock-out=true</code> for a <strong>"Clock Out"</strong> shortcut.</li>
+            </ol>
+
+            <h4>📱 Create a Shortcut on Android (Chrome)</h4>
+            <ol>
+              <li>Open Chrome and navigate to:<br>
+                <code>https://avinzarlez.github.io/carrier-helper/?clock-in=true</code></li>
+              <li>Tap the <strong>⋮ menu</strong> (three dots, top-right).</li>
+              <li>Tap <strong>Add to Home screen</strong>.</li>
+              <li>Name it <strong>"Clock In"</strong> and tap <strong>Add</strong>.</li>
+              <li>Repeat with <code>?clock-out=true</code> for a <strong>"Clock Out"</strong> shortcut.</li>
+            </ol>
+
+            <h4>💻 Create a Bookmark on Desktop</h4>
+            <ol>
+              <li>Navigate to:<br>
+                <code>https://avinzarlez.github.io/carrier-helper/?clock-in=true</code></li>
+              <li>Bookmark the page (Ctrl+D / Cmd+D) and name it <strong>"Clock In"</strong>.</li>
+              <li>Repeat with <code>?clock-out=true</code> for a <strong>"Clock Out"</strong> bookmark.</li>
+            </ol>
+            <p class="about-note">
+              <strong>Tip:</strong> If you are hosting your own copy, replace the URL above with your
+              own GitHub Pages URL.
+            </p>
+          </div>
+        </details>
+
+        <details class="about-section">
+          <summary>🔗 Links &amp; Resources</summary>
+          <div class="about-details-body">
+            <ul>
+              <li><a href="https://github.com/AvinZarlez/carrier-helper" target="_blank" rel="noopener noreferrer">View this project on GitHub</a></li>
+              <li><a href="https://github.com/AvinZarlez/carrier-helper/tree/main/docs" target="_blank" rel="noopener noreferrer">Full documentation</a></li>
+              <li><a href="https://www.avinzarlez.com/" target="_blank" rel="noopener noreferrer">Created by Avin Zarlez</a></li>
+            </ul>
+          </div>
+        </details>
       </section>
     </div>
   </main>

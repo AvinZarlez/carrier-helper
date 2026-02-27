@@ -33,6 +33,7 @@ Tests cover the core utility functions in `js/common.js` as well as export/impor
 | `tests/meta-data.test.js` | Metadata utilities in `js/common.js` (defaults, storage, CSV, type detection) |
 | `tests/export-import.test.js` | Export filtering logic and import/export round-trips for all CSV formats |
 | `tests/hours-calc.test.js` | Hours and pay calculation utilities in `js/common.js` |
+| `tests/app.test.js` | URL parameter handling in `js/app.js` (auto clock-in/out) |
 
 ---
 
@@ -131,7 +132,8 @@ tests/
 ├── common.test.js         # Tests for js/common.js utilities (storage, formatting, CSV)
 ├── meta-data.test.js      # Tests for js/common.js metadata utilities
 ├── export-import.test.js  # Tests for export filtering and import/export round-trips
-└── hours-calc.test.js     # Tests for js/common.js hours/pay calculation utilities
+├── hours-calc.test.js     # Tests for js/common.js hours/pay calculation utilities
+└── app.test.js            # Tests for js/app.js URL parameter handling
 ```
 
 ### Adding New Tests
