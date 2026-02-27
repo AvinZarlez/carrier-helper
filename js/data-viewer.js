@@ -296,6 +296,16 @@ function renderDataViewer() {
   // Pre-build a map of entry id → 1-based row number (based on sorted order)
   const rowNumMap = new Map(entries.map((e, i) => [e.id, i + 1]));
 
+  // Compute which dates appear more than once in the current view
+  const dateCounts = {};
+  viewEntries.forEach((e) => {
+    const dateStr = dvToLocalDateString(e.clockIn);
+    dateCounts[dateStr] = (dateCounts[dateStr] || 0) + 1;
+  });
+  const duplicateDates = new Set(
+    Object.keys(dateCounts).filter((d) => dateCounts[d] > 1)
+  );
+
   let lastDate = "";
   dvBody.innerHTML = viewEntries
     .map((entry) => {
@@ -318,7 +328,12 @@ function renderDataViewer() {
         </tr>`;
       }
       const isSelected = selectedEntryIds.has(entry.id);
-      html += `<tr${isSelected ? ' class="dv-row-selected"' : ''}>
+      const isDuplicate = duplicateDates.has(entryDateStr);
+      const rowClasses = [];
+      if (isSelected) rowClasses.push("dv-row-selected");
+      if (isDuplicate) rowClasses.push("same-day-highlight");
+      const rowClass = rowClasses.join(" ");
+      html += `<tr${rowClass ? ` class="${rowClass}"` : ''}>
       <td><input type="checkbox" class="dv-row-checkbox" data-id="${entry.id}" data-date="${entryDateStr}"${isSelected ? " checked" : ""} /></td>
       <td>${rowNum}</td>
       <td>${date}</td>
