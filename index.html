@@ -150,7 +150,20 @@
           <button id="hv-prev-btn" class="btn-nav-week">‹ Prev</button>
           <div class="hv-nav-center">
             <span id="hv-period-label" class="dv-week-label"></span>
-            <input type="date" id="hv-date-picker" class="hv-date-picker" title="Jump to date" />
+            <!-- Week picker: date input + This Week button -->
+            <div id="hv-week-picker" class="hv-picker-row">
+              <input type="date" id="hv-date-picker" class="hv-date-picker" title="Jump to date" />
+              <button id="hv-this-week-btn" class="btn-jump">This Week</button>
+            </div>
+            <!-- Month picker: This Month button + month grid -->
+            <div id="hv-month-picker" style="display:none">
+              <button id="hv-this-month-btn" class="btn-jump hv-this-period-btn">This Month</button>
+              <div id="hv-month-grid" class="hv-month-grid"></div>
+            </div>
+            <!-- Year picker: dynamically generated year buttons -->
+            <div id="hv-year-picker" style="display:none">
+              <div id="hv-year-btns" class="hv-year-btns"></div>
+            </div>
           </div>
           <button id="hv-next-btn" class="btn-nav-week">Next ›</button>
         </div>

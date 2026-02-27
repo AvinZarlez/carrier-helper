@@ -1207,7 +1207,85 @@ tbody tr:hover {
   text-decoration: underline;
 }
 
-/* ── Hours View ── */
+/* Hours View picker enhancements */
+.hv-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.hv-month-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.hv-this-period-btn {
+  width: 100%;
+}
+
+.hv-month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.3rem;
+}
+
+.hv-month-btn {
+  background: #e2e8f0;
+  color: #4a5568;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.hv-month-btn:hover {
+  background: #cbd5e0;
+}
+
+.hv-month-btn.active {
+  background: #2b6cb0;
+  color: #fff;
+  border-color: #2b6cb0;
+}
+
+.hv-year-btns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  justify-content: center;
+}
+
+.hv-year-btn {
+  background: #e2e8f0;
+  color: #4a5568;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.hv-year-btn:hover {
+  background: #cbd5e0;
+}
+
+.hv-year-btn.active {
+  background: #2b6cb0;
+  color: #fff;
+  border-color: #2b6cb0;
+}
+
 
 .hv-period-nav {
   display: flex;
