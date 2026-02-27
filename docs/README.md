@@ -8,7 +8,7 @@ This folder contains the technical documentation for the Carrier Helper web appl
 | --- | --- |
 | [GitHub Pages Setup](github-pages-setup.md) | How the GitHub Pages deployment works and how to fork this repo to deploy your own copy |
 | [Data Management](data-management.md) | How to save, export, import, and back up your time-entry data |
-| [URL Parameters](url-parameters.md) | How to use `?clock-in=true` and `?clock-out=true` for automatic clock in/out shortcuts |
+| [URL Parameters](url-parameters.md) | How to use `?clock-in=true`, `?clock-out=true`, and `?page=…` for automatic shortcuts |
 | [Cloud Sync Setup](cloud-sync-setup.md) | Step-by-step guide to connecting the app to Firebase for cross-device cloud sync |
 | [Testing](testing.md) | How to run tests locally, add new tests, and use GitHub Actions CI |
 

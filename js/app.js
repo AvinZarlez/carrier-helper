@@ -33,7 +33,7 @@
  * - Cloud sync logic (use cloud-sync.js)
  */
 
-/* global initTimeEntriesView, initHoursView */
+/* global initTimeEntriesView, initHoursView, showTab */
 /* global loadEntries, saveEntries, getOpenEntry, createEntry, clockOutEntry, renderTimeEntries */
 
 // ── URL Parameter Handling ──────────────────────────────────────────────────
@@ -73,6 +73,34 @@ function handleUrlParams(search) {
   }
 }
 
+// ── Page Navigation Parameter ───────────────────────────────────────────────
+
+/**
+ * Handle the `page` URL query parameter to navigate to a specific view on load.
+ *
+ * - `?page=hour`  — Opens the Hours View.
+ * - `?page=data`  — Opens the Data Viewer.
+ * - `?page=about` — Opens the About view.
+ * - Any other value, or absent — Stays on the default Time Entries view.
+ *
+ * @param {string} [search] - URL search string to parse (defaults to
+ *   `window.location.search`).  Pass an explicit value in tests.
+ */
+function handlePageParam(search) {
+  const params = new URLSearchParams(
+    search !== undefined ? search : window.location.search
+  );
+
+  const page = params.get("page");
+  if (page === "hour") {
+    showTab("hours-view");
+  } else if (page === "data") {
+    showTab("data-viewer");
+  } else if (page === "about") {
+    showTab("about");
+  }
+}
+
 // ── About Page Dynamic URL ──────────────────────────────────────────────────
 
 /**
@@ -108,6 +136,9 @@ function initApp() {
   // Handle any URL parameters for automatic clock in/out
   handleUrlParams();
 
+  // Handle page parameter for initial view navigation
+  handlePageParam();
+
   // Populate shortcut URL examples in the About page dynamically
   populateShortcutUrls(".js-shortcut-url-clock-in", "?clock-in=true");
   populateShortcutUrls(".js-shortcut-url-clock-out", "?clock-out=true");
@@ -126,5 +157,5 @@ if (document.readyState === "loading") {
 // ── Export for testing (Node.js environment) ───────────────────────────────
 
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { handleUrlParams };
+  module.exports = { handleUrlParams, handlePageParam };
 }

@@ -14,6 +14,7 @@ screen or browser bookmarks that clock you in or out without any extra taps.
 | --- | --- | --- |
 | `clock-in` | `true` | Automatically clocks you in when the page loads |
 | `clock-out` | `true` | Automatically clocks you out when the page loads |
+| `page` | `hour`, `data`, or `about` | Opens the specified view on page load |
 
 ### Behavior Details
 
@@ -24,6 +25,15 @@ screen or browser bookmarks that clock you in or out without any extra taps.
 - If **both** parameters are present, `clock-in` takes precedence.
 - Any value other than `true` (e.g. `?clock-in=1` or `?clock-in=yes`) is ignored.
 
+#### Page Parameter
+
+- **`?page=hour`** — Opens the Hours View when the page loads.
+- **`?page=data`** — Opens the Data Viewer when the page loads.
+- **`?page=about`** — Opens the About view when the page loads.
+- Any other value, or no `page` parameter, loads the default Time Entries view.
+- The `page` parameter can be combined with `clock-in` or `clock-out`
+  (e.g. `?clock-in=true&page=hour`).
+
 ---
 
 ## Example URLs
@@ -31,8 +41,11 @@ screen or browser bookmarks that clock you in or out without any extra taps.
 Using the default GitHub Pages deployment:
 
 ```text
-Clock In:   https://avinzarlez.github.io/carrier-helper/?clock-in=true
-Clock Out:  https://avinzarlez.github.io/carrier-helper/?clock-out=true
+Clock In:    https://avinzarlez.github.io/carrier-helper/?clock-in=true
+Clock Out:   https://avinzarlez.github.io/carrier-helper/?clock-out=true
+Hours View:  https://avinzarlez.github.io/carrier-helper/?page=hour
+Data Viewer: https://avinzarlez.github.io/carrier-helper/?page=data
+About:       https://avinzarlez.github.io/carrier-helper/?page=about
 ```
 
 If you host your own copy, replace the base URL with your own GitHub Pages URL.
@@ -70,5 +83,10 @@ The `handleUrlParams()` function in `js/app.js` runs once during page initializa
 all views have been set up. It reads `window.location.search`, checks for the `clock-in` or
 `clock-out` parameter, and calls the same clock-in/clock-out logic used by the main button.
 
-Because the check happens after the UI is fully initialized, the page always displays the
-correct state — you will see "Clocked In" immediately if the auto clock-in succeeded.
+The `handlePageParam()` function runs immediately after, reading the `page` parameter and
+calling `showTab()` to switch to the requested view. If no valid `page` value is found, the
+default Time Entries view is shown.
+
+Because both checks happen after the UI is fully initialized, the page always displays the
+correct state — you will see "Clocked In" immediately if the auto clock-in succeeded, and
+the correct view tab will be active.

@@ -24,6 +24,7 @@ const mockGetOpenEntry = jest.fn();
 const mockRenderTimeEntries = jest.fn();
 const mockInitTimeEntriesView = jest.fn();
 const mockInitHoursView = jest.fn();
+const mockShowTab = jest.fn();
 
 global.createEntry = mockCreateEntry;
 global.clockOutEntry = mockClockOutEntry;
@@ -33,8 +34,9 @@ global.getOpenEntry = mockGetOpenEntry;
 global.renderTimeEntries = mockRenderTimeEntries;
 global.initTimeEntriesView = mockInitTimeEntriesView;
 global.initHoursView = mockInitHoursView;
+global.showTab = mockShowTab;
 
-const { handleUrlParams } = require("../js/app.js");
+const { handleUrlParams, handlePageParam } = require("../js/app.js");
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -148,5 +150,46 @@ describe("handleUrlParams", () => {
       expect(mockCreateEntry).toHaveBeenCalledTimes(1);
       expect(mockClockOutEntry).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe("handlePageParam", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it("navigates to hours-view when page=hour", () => {
+    handlePageParam("?page=hour");
+    expect(mockShowTab).toHaveBeenCalledWith("hours-view");
+  });
+
+  it("navigates to data-viewer when page=data", () => {
+    handlePageParam("?page=data");
+    expect(mockShowTab).toHaveBeenCalledWith("data-viewer");
+  });
+
+  it("navigates to about when page=about", () => {
+    handlePageParam("?page=about");
+    expect(mockShowTab).toHaveBeenCalledWith("about");
+  });
+
+  it("does nothing when page parameter is absent", () => {
+    handlePageParam("");
+    expect(mockShowTab).not.toHaveBeenCalled();
+  });
+
+  it("does nothing for unrecognised page values", () => {
+    handlePageParam("?page=unknown");
+    expect(mockShowTab).not.toHaveBeenCalled();
+  });
+
+  it("does nothing when search has unrelated parameters only", () => {
+    handlePageParam("?foo=bar");
+    expect(mockShowTab).not.toHaveBeenCalled();
+  });
+
+  it("works alongside other URL parameters", () => {
+    handlePageParam("?clock-in=true&page=hour");
+    expect(mockShowTab).toHaveBeenCalledWith("hours-view");
   });
 });
