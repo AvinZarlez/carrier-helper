@@ -33,7 +33,10 @@ carrier-helper/
 │   ├── common.js           # Shared utilities (storage, formatting, CSV, metadata, pay calculations)
 │   ├── time-entries.js     # Time Entries view logic
 │   ├── hours-view.js       # Hours View logic (weekly/monthly/yearly summaries, pay breakdown)
-│   ├── data-viewer.js      # Data Viewer view logic (sub-tabs, export, import)
+│   ├── data-viewer.js      # Data Viewer view logic (read-only table, week/range nav, multi-select)
+│   ├── edit-modal.js       # Edit Entry modal (shared by views)
+│   ├── tab-navigation.js   # Tab switching and sub-tab navigation
+│   ├── data-management.js  # Data import/export/delete functionality
 │   ├── meta-data.js        # Meta Data view logic (USPS pay scale settings form)
 │   ├── app.js              # Application bootstrap
 │   ├── firebase-config.js  # Firebase configuration (empty by default)
@@ -43,7 +46,8 @@ carrier-helper/
 │   ├── common.test.js      # Tests for common.js core utilities
 │   ├── meta-data.test.js   # Tests for common.js metadata utilities
 │   ├── export-import.test.js # Tests for export filtering and import/export round-trips
-│   └── hours-calc.test.js  # Tests for common.js hours/pay calculation utilities
+│   ├── hours-calc.test.js  # Tests for common.js hours/pay calculation utilities
+│   └── app.test.js         # Tests for app.js URL parameter handling
 ├── docs/
 │   ├── README.md           # Documentation index
 │   ├── github-pages-setup.md
@@ -66,13 +70,16 @@ carrier-helper/
 
 1. `js/common.js` — Shared utilities (must load first)
 2. `js/time-entries.js` — Time Entries view
-3. `js/data-viewer.js` — Data Viewer view
-4. `js/meta-data.js` — Meta Data view
-5. `js/hours-view.js` — Hours View
-6. `js/app.js` — Application initialization
-7. Firebase SDK (external CDN)
-8. `js/firebase-config.js` — Firebase configuration
-9. `js/cloud-sync.js` — Cloud sync module
+3. `js/data-viewer.js` — Data Viewer view (table, navigation, multi-select)
+4. `js/edit-modal.js` — Edit Entry modal (shared by views)
+5. `js/tab-navigation.js` — Tab switching and sub-tab navigation
+6. `js/data-management.js` — Data import/export/delete
+7. `js/meta-data.js` — Meta Data view
+8. `js/hours-view.js` — Hours View
+9. `js/app.js` — Application initialization
+10. Firebase SDK (external CDN)
+11. `js/firebase-config.js` — Firebase configuration
+12. `js/cloud-sync.js` — Cloud sync module
 
 ### Module Responsibilities
 
@@ -81,7 +88,10 @@ carrier-helper/
 | `common.js` | Storage, formatting, CSV utilities, metadata utilities, hours/pay calculations (no DOM) |
 | `time-entries.js` | Clock panel, entries table, delete/clear |
 | `hours-view.js` | Hours View: week/month/year summaries, pay breakdown cards, period navigation |
-| `data-viewer.js` | Sub-tabs, data table, export, import, tab navigation |
+| `data-viewer.js` | Data Viewer: read-only table, week/range navigation, view mode, multi-select |
+| `edit-modal.js` | Edit Entry modal: open, validate, save, close (shared by Time Entries and Data Viewer) |
+| `tab-navigation.js` | Main tab switching, Data Viewer sub-tab switching, collapse toggle |
+| `data-management.js` | Export CSV (entries, metadata, combined, date range), import CSV, delete all data |
 | `meta-data.js` | Meta Data form rendering, save/reset, status messages |
 | `app.js` | Bootstrap and initialization |
 | `cloud-sync.js` | Firebase auth and Firestore sync (entries + metadata) |
@@ -125,11 +135,27 @@ carrier-helper/
 
 #### data-viewer.js
 - `renderDataViewer()` — Render read-only table for current view (week or range)
-- `showTab(tab)` — Switch between main views ("time-entries", "hours-view", "data-viewer")
+- `getWeekStart(date)` — Get Monday of the week containing a date
+- `getCurrentViewRange()` — Get start/end dates for the current view
+- `setViewMode(mode)` — Switch between "week" and "range" view modes
+- `clearSelection()` — Deselect all entries and hide selection banner
+- `deleteSelected()` — Delete currently selected entries
+
+#### edit-modal.js
+- `openEditModal(entryId)` — Open and populate the edit modal for an entry
+- `closeEditModal()` — Close the edit modal without saving
+- `saveEditEntry()` — Validate and save the edited entry
+- `isoToDatetimeLocal(iso)` — Convert ISO timestamp to datetime-local format
+
+#### tab-navigation.js
+- `showTab(tab)` — Switch between main views ("time-entries", "hours-view", "data-viewer", "about")
 - `showSubTab(subTab)` — Switch between Time Entries and Meta Data sub-tabs
+
+#### data-management.js
 - `exportToCSV()` — Export current-view time entries (selection-aware)
 - `exportMetaDataToCSV()` — Export metadata as CSV
 - `exportAllDataToCSV()` — Export all entries + metadata as combined CSV
+- `exportRangeToCSV()` — Export entries within a user-specified date range
 
 #### meta-data.js
 - `renderMetaDataForm()` — Populate form with stored (or default) values
@@ -254,7 +280,7 @@ This is a static site with no build/bundle step. Files are served directly by Gi
 2. Add script tag in `index.html` (after common.js, before app.js)
 3. Add HTML section in `index.html`
 4. Add tab button to navigation
-5. Update `data-viewer.js` or create shared navigation module
+5. Update `tab-navigation.js` to handle the new tab
 6. Update this documentation
 
 ### Fix a bug

@@ -5,22 +5,30 @@
  * It loads all view modules and starts the app.
  *
  * FILE STRUCTURE:
- * - js/common.js       — Shared utilities (storage, formatting, CSV)
- * - js/time-entries.js — Time Entries view (clock in/out, entries table)
- * - js/data-viewer.js  — Data Viewer view (export/import, read-only table, sub-tabs)
- * - js/meta-data.js    — Meta Data view (USPS pay scale settings form)
- * - js/cloud-sync.js   — Firebase cloud sync module
+ * - js/common.js          — Shared utilities (storage, formatting, CSV)
+ * - js/time-entries.js    — Time Entries view (clock in/out, entries table)
+ * - js/data-viewer.js     — Data Viewer view (read-only table, multi-select)
+ * - js/edit-modal.js      — Edit Entry modal (shared by views)
+ * - js/tab-navigation.js  — Tab switching and sub-tab navigation
+ * - js/data-management.js — Data import/export/delete functionality
+ * - js/meta-data.js       — Meta Data view (USPS pay scale settings form)
+ * - js/hours-view.js      — Hours View (weekly/monthly/yearly summaries)
+ * - js/cloud-sync.js      — Firebase cloud sync module
  * - js/firebase-config.js — Firebase configuration
  *
  * LOAD ORDER (in index.html):
  * 1. common.js (shared utilities)
  * 2. time-entries.js (Time Entries view)
  * 3. data-viewer.js (Data Viewer view)
- * 4. meta-data.js (Meta Data view)
- * 5. app.js (this file - initialization)
- * 6. Firebase SDK (external)
- * 7. firebase-config.js
- * 8. cloud-sync.js
+ * 4. edit-modal.js (Edit Entry modal)
+ * 5. tab-navigation.js (Tab switching)
+ * 6. data-management.js (Import/export/delete)
+ * 7. meta-data.js (Meta Data view)
+ * 8. hours-view.js (Hours View)
+ * 9. app.js (this file - initialization)
+ * 10. Firebase SDK (external)
+ * 11. firebase-config.js
+ * 12. cloud-sync.js
  *
  * WHAT BELONGS HERE:
  * - Application initialization
@@ -28,7 +36,7 @@
  * - Any cross-cutting concerns
  *
  * WHAT DOES NOT BELONG HERE:
- * - View-specific logic (use time-entries.js or data-viewer.js)
+ * - View-specific logic (use the appropriate view file)
  * - Utility functions (use common.js)
  * - Cloud sync logic (use cloud-sync.js)
  */

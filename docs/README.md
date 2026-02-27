@@ -34,7 +34,10 @@ See the top of each file in `js/` for detailed documentation:
 - `js/common.js` — Shared utilities (storage, formatting, CSV, pay calculations)
 - `js/time-entries.js` — Time Entries view
 - `js/hours-view.js` — Hours View (weekly/monthly/yearly summaries with pay breakdown)
-- `js/data-viewer.js` — Data Viewer view (sub-tabs, export, import, tab navigation)
+- `js/data-viewer.js` — Data Viewer view (read-only table, week/range navigation, multi-select)
+- `js/edit-modal.js` — Edit Entry modal (shared by Time Entries and Data Viewer)
+- `js/tab-navigation.js` — Tab switching and sub-tab navigation
+- `js/data-management.js` — Data import/export/delete functionality
 - `js/meta-data.js` — Meta Data view (USPS pay scale settings form)
 - `js/app.js` — Application bootstrap and URL parameter handling
 - `js/cloud-sync.js` — Firebase cloud sync
