@@ -58,10 +58,8 @@ const deleteAllBtn = document.getElementById("delete-all-btn");
  */
 function exportToCSV() {
   const range = getCurrentViewRange();
-  // Determine whether the end is exclusive (week mode) or inclusive (range mode)
-  const exclusiveEnd = !(range.end.getHours() === 23 && range.end.getMinutes() === 59);
 
-  const entries = getExportEntries(loadEntries(), selectedEntryIds, range.start, range.end, exclusiveEnd);
+  const entries = getExportEntries(loadEntries(), selectedEntryIds, range.start, range.end, range.exclusiveEnd);
   const csv = generateCSV(entries);
   const filename = `carrier-helper-${new Date().toISOString().slice(0, 10)}.csv`;
 

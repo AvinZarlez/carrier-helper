@@ -143,21 +143,22 @@ let customRangeEnd = "";
 
 /**
  * Get the start and end Date objects for the currently displayed view.
- * In week mode, returns the Monday and Sunday of the current week.
- * In range mode, returns the custom range dates (or null if not set).
- * @returns {{start: Date, end: Date}}
+ * In week mode, returns the Monday and Sunday+1 of the current week (exclusive end).
+ * In range mode, returns the custom range dates (inclusive end).
+ * @returns {{start: Date, end: Date, exclusiveEnd: boolean}}
  */
 function getCurrentViewRange() {
   if (viewMode === "range" && customRangeStart && customRangeEnd) {
     return {
       start: new Date(customRangeStart + "T00:00:00"),
-      end: new Date(customRangeEnd + "T00:00:00")
+      end: new Date(customRangeEnd + "T23:59:59.999"),
+      exclusiveEnd: false
     };
   }
-  // Default: current week (Monday to Sunday inclusive)
+  // Default: current week (Monday to next Monday, exclusive upper bound)
   const end = new Date(currentWeekStart);
-  end.setDate(end.getDate() + 6);
-  return { start: new Date(currentWeekStart), end };
+  end.setDate(end.getDate() + 7);
+  return { start: new Date(currentWeekStart), end, exclusiveEnd: true };
 }
 
 // ── Multi-select State ──────────────────────────────────────────────────────
@@ -489,9 +490,7 @@ dvSelectAllBtn.addEventListener("click", () => {
   updateSelectionBanner();
 });
 
-dvDownloadSelectedBtn.addEventListener("click", () => {
-  if (typeof exportToCSV === "function") exportToCSV();
-});
+dvDownloadSelectedBtn.addEventListener("click", () => exportToCSV());
 dvDeleteSelectedBtn.addEventListener("click", deleteSelected);
 dvDeselectAllBtn.addEventListener("click", clearSelection);
 
