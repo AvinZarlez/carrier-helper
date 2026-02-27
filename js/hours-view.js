@@ -41,6 +41,12 @@ const hvEmptyMsg = document.getElementById("hv-empty-msg");
 const hvPeriodWeekBtn = document.getElementById("hv-period-week");
 const hvPeriodMonthBtn = document.getElementById("hv-period-month");
 const hvPeriodYearBtn = document.getElementById("hv-period-year");
+const hvWeekPicker = document.getElementById("hv-week-picker");
+const hvMonthPicker = document.getElementById("hv-month-picker");
+const hvYearPicker = document.getElementById("hv-year-picker");
+const hvMonthGrid = document.getElementById("hv-month-grid");
+const hvMonthYearBtns = document.getElementById("hv-month-year-btns");
+const hvYearBtns = document.getElementById("hv-year-btns");
 
 // ── State ───────────────────────────────────────────────────────────────────
 
@@ -154,6 +160,7 @@ function buildSummaryCardsHtml(summary) {
 // ── Week View ───────────────────────────────────────────────────────────────
 
 const DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_SHORT_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 /**
  * Build the HTML for a week breakdown table (one row per day).
@@ -564,18 +571,39 @@ function renderHoursView() {
     hvEmptyMsg.style.display = "block";
   }
 
-  // Update date picker value
+  // Update picker UI
   if (hvPeriodType === "week") {
-    hvDatePicker.type = "date";
     hvDatePicker.value = toLocalDateString(hvCurrentDate.toISOString());
   } else if (hvPeriodType === "month") {
-    hvDatePicker.type = "month";
-    const y = hvCurrentDate.getFullYear();
-    const m = String(hvCurrentDate.getMonth() + 1).padStart(2, "0");
-    hvDatePicker.value = `${y}-${m}`;
+    const curMonth = hvCurrentDate.getMonth();
+    const curYear = hvCurrentDate.getFullYear();
+    const yearsSet = new Set(
+      allEntries
+        .filter(e => e.clockIn)
+        .map(e => new Date(e.clockIn).getFullYear())
+        .filter(y => !isNaN(y))
+    );
+    yearsSet.add(curYear);
+    const years = Array.from(yearsSet).sort((a, b) => a - b);
+    hvMonthYearBtns.innerHTML = years.map(y =>
+      `<button class="hv-year-btn${y === curYear ? " active" : ""}" data-year="${y}">${y}</button>`
+    ).join("");
+    hvMonthGrid.innerHTML = MONTH_SHORT_NAMES.map((name, i) =>
+      `<button class="hv-month-btn${i === curMonth ? " active" : ""}" data-month="${i}">${name}</button>`
+    ).join("");
   } else {
-    hvDatePicker.type = "number";
-    hvDatePicker.value = String(hvCurrentDate.getFullYear());
+    const yearsSet = new Set(
+      allEntries
+        .filter(e => e.clockIn)
+        .map(e => new Date(e.clockIn).getFullYear())
+        .filter(y => !isNaN(y))
+    );
+    const curYear = hvCurrentDate.getFullYear();
+    yearsSet.add(curYear);
+    const years = Array.from(yearsSet).sort((a, b) => a - b);
+    hvYearBtns.innerHTML = years.map(y =>
+      `<button class="hv-year-btn${y === curYear ? " active" : ""}" data-year="${y}">${y}</button>`
+    ).join("");
   }
 }
 
@@ -591,20 +619,9 @@ function hvSetPeriodType(type) {
   hvPeriodMonthBtn.classList.toggle("active", type === "month");
   hvPeriodYearBtn.classList.toggle("active", type === "year");
 
-  // Update date picker attributes for the new type
-  if (type === "week") {
-    hvDatePicker.title = "Jump to date";
-    hvDatePicker.min = "";
-    hvDatePicker.max = "";
-  } else if (type === "month") {
-    hvDatePicker.title = "Jump to month";
-    hvDatePicker.min = "";
-    hvDatePicker.max = "";
-  } else {
-    hvDatePicker.title = "Jump to year";
-    hvDatePicker.min = "2000";
-    hvDatePicker.max = "2099";
-  }
+  hvWeekPicker.style.display = type === "week" ? "" : "none";
+  hvMonthPicker.style.display = type === "month" ? "" : "none";
+  hvYearPicker.style.display = type === "year" ? "" : "none";
 
   renderHoursView();
 }
@@ -644,30 +661,56 @@ function initHoursView() {
     renderHoursView();
   });
 
-  // Date picker
+  // Date picker (week mode only)
   hvDatePicker.addEventListener("change", () => {
+    if (hvPeriodType !== "week") return;
     const val = hvDatePicker.value;
     if (!val) return;
-    if (hvPeriodType === "week") {
-      // val is "YYYY-MM-DD" — parse as local midnight to avoid UTC offset issues
-      const parts = val.split("-");
-      if (parts.length === 3) {
-        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 0, 0, 0, 0);
-        if (!isNaN(d.getTime())) hvCurrentDate = d;
-      }
-    } else if (hvPeriodType === "month") {
-      // val is "YYYY-MM"
-      const parts = val.split("-");
-      if (parts.length === 2) {
-        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, 1, 0, 0, 0, 0);
-        if (!isNaN(d.getTime())) hvCurrentDate = d;
-      }
-    } else {
-      const year = parseInt(val, 10);
-      if (year >= 2000 && year <= 2099) {
-        hvCurrentDate = new Date(year, 0, 1, 0, 0, 0, 0);
-      }
+    // val is "YYYY-MM-DD" — parse as local midnight to avoid UTC offset issues
+    const parts = val.split("-");
+    if (parts.length === 3) {
+      const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 0, 0, 0, 0);
+      if (!isNaN(d.getTime())) hvCurrentDate = d;
     }
+    renderHoursView();
+  });
+
+  // This Week button
+  document.getElementById("hv-this-week-btn").addEventListener("click", () => {
+    hvCurrentDate = new Date();
+    renderHoursView();
+  });
+
+  // This Month button
+  document.getElementById("hv-this-month-btn").addEventListener("click", () => {
+    hvCurrentDate = new Date();
+    renderHoursView();
+  });
+
+  // Month grid (event delegation)
+  hvMonthGrid.addEventListener("click", (e) => {
+    const btn = e.target.closest(".hv-month-btn");
+    if (!btn) return;
+    const month = parseInt(btn.dataset.month, 10);
+    hvCurrentDate = new Date(hvCurrentDate.getFullYear(), month, 1, 0, 0, 0, 0);
+    renderHoursView();
+  });
+
+  // Month view year buttons (event delegation)
+  hvMonthYearBtns.addEventListener("click", (e) => {
+    const btn = e.target.closest(".hv-year-btn");
+    if (!btn) return;
+    const year = parseInt(btn.dataset.year, 10);
+    hvCurrentDate = new Date(year, hvCurrentDate.getMonth(), 1, 0, 0, 0, 0);
+    renderHoursView();
+  });
+
+  // Year buttons (event delegation)
+  hvYearBtns.addEventListener("click", (e) => {
+    const btn = e.target.closest(".hv-year-btn");
+    if (!btn) return;
+    const year = parseInt(btn.dataset.year, 10);
+    hvCurrentDate = new Date(year, hvCurrentDate.getMonth(), 1, 0, 0, 0, 0);
     renderHoursView();
   });
 }
