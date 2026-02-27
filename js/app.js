@@ -73,6 +73,20 @@ function handleUrlParams(search) {
   }
 }
 
+// ── About Page Dynamic URL ──────────────────────────────────────────────────
+
+/**
+ * Populate the shortcut URL examples in the About page with the actual
+ * URL of the current page, so that forks hosted elsewhere show the correct URL.
+ */
+function populateShortcutUrls() {
+  const base = window.location.origin + window.location.pathname;
+  const url = base.replace(/\/$/, "") + "/?clock-in=true";
+  document.querySelectorAll(".js-shortcut-url").forEach(function (el) {
+    el.textContent = url;
+  });
+}
+
 // ── Application Initialization ──────────────────────────────────────────────
 
 /**
@@ -92,6 +106,9 @@ function initApp() {
 
   // Handle any URL parameters for automatic clock in/out
   handleUrlParams();
+
+  // Populate shortcut URL examples in the About page dynamically
+  populateShortcutUrls();
 
   // Log successful initialization
   console.log("Carrier Helper initialized");
