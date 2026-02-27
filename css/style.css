@@ -1188,6 +1188,124 @@ tbody tr:hover {
   }
 }
 
+/* ── About page ── */
+.about-panel {
+  line-height: 1.6;
+}
+
+.about-panel h2 {
+  font-size: 1.25rem;
+  color: #2d3748;
+  margin-bottom: 1rem;
+}
+
+.about-intro {
+  color: #4a5568;
+  font-size: 0.95rem;
+  margin-bottom: 1.25rem;
+}
+
+.about-section {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  background: #f7fafc;
+}
+
+.about-section summary {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #2d3748;
+  cursor: pointer;
+  padding: 0.75rem 1rem;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.about-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.about-section summary::after {
+  content: "▸";
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  color: #a0aec0;
+  font-size: 0.85rem;
+}
+
+.about-section[open] > summary::after {
+  transform: rotate(90deg);
+}
+
+.about-details-body {
+  padding: 0 1rem 1rem;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+.about-details-body ol,
+.about-details-body ul {
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.about-details-body li {
+  margin-bottom: 0.35rem;
+}
+
+.about-details-body h4 {
+  font-size: 0.95rem;
+  color: #2d3748;
+  margin: 1rem 0 0.5rem;
+}
+
+.about-details-body code {
+  background: #edf2f7;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  word-break: break-all;
+}
+
+.about-details-body p {
+  margin: 0.5rem 0;
+}
+
+.about-note {
+  background: #ebf8ff;
+  border: 1px solid #90cdf4;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  color: #2b6cb0;
+  margin-top: 0.75rem;
+}
+
+.about-details-body a {
+  color: #2b6cb0;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.about-details-body a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .about-section summary {
+    font-size: 0.92rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .about-details-body {
+    padding: 0 0.75rem 0.75rem;
+    font-size: 0.85rem;
+  }
+}
+
 /* ── Footer ── */
 .site-footer {
   background: #2b6cb0;

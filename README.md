@@ -54,6 +54,10 @@ Want your shifts on every device automatically? Connect a free Firebase account 
 
 The app is fully responsive and works on any screen, from a 320 px phone to a widescreen desktop. No app store download required.
 
+### ⚡ Quick Clock-In / Clock-Out Shortcuts
+
+Add `?clock-in=true` or `?clock-out=true` to the page URL to automatically clock in or out when the page loads. Create home-screen shortcuts on your phone for one-tap clocking — see the **About** tab in the app or the [URL Parameters guide](docs/url-parameters.md) for step-by-step instructions.
+
 ---
 
 ## Documentation
