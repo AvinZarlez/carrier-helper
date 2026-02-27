@@ -24,6 +24,7 @@ const mockGetOpenEntry = jest.fn();
 const mockRenderTimeEntries = jest.fn();
 const mockInitTimeEntriesView = jest.fn();
 const mockInitHoursView = jest.fn();
+const mockShowTab = jest.fn();
 
 global.createEntry = mockCreateEntry;
 global.clockOutEntry = mockClockOutEntry;
@@ -33,6 +34,7 @@ global.getOpenEntry = mockGetOpenEntry;
 global.renderTimeEntries = mockRenderTimeEntries;
 global.initTimeEntriesView = mockInitTimeEntriesView;
 global.initHoursView = mockInitHoursView;
+global.showTab = mockShowTab;
 
 const { handleUrlParams } = require("../js/app.js");
 
@@ -147,6 +149,44 @@ describe("handleUrlParams", () => {
 
       expect(mockCreateEntry).toHaveBeenCalledTimes(1);
       expect(mockClockOutEntry).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("?page=", () => {
+    it("navigates to hours-view when page=hour", () => {
+      handleUrlParams("?page=hour");
+      expect(mockShowTab).toHaveBeenCalledWith("hours-view");
+    });
+
+    it("navigates to data-viewer when page=data", () => {
+      handleUrlParams("?page=data");
+      expect(mockShowTab).toHaveBeenCalledWith("data-viewer");
+    });
+
+    it("navigates to about when page=about", () => {
+      handleUrlParams("?page=about");
+      expect(mockShowTab).toHaveBeenCalledWith("about");
+    });
+
+    it("does not call showTab for an unrecognized page value", () => {
+      handleUrlParams("?page=unknown");
+      expect(mockShowTab).not.toHaveBeenCalled();
+    });
+
+    it("does not call showTab when page parameter is absent", () => {
+      handleUrlParams("");
+      expect(mockShowTab).not.toHaveBeenCalled();
+    });
+
+    it("handles page=hour combined with clock-in=true", () => {
+      const entries = [];
+      mockLoadEntries.mockReturnValue(entries);
+      mockGetOpenEntry.mockReturnValue(null);
+
+      handleUrlParams("?clock-in=true&page=hour");
+
+      expect(mockCreateEntry).toHaveBeenCalledTimes(1);
+      expect(mockShowTab).toHaveBeenCalledWith("hours-view");
     });
   });
 });

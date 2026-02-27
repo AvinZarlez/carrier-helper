@@ -35,17 +35,22 @@
 
 /* global initTimeEntriesView, initHoursView */
 /* global loadEntries, saveEntries, getOpenEntry, createEntry, clockOutEntry, renderTimeEntries */
+/* global showTab */
 
 // ── URL Parameter Handling ──────────────────────────────────────────────────
 
 /**
- * Handle URL query parameters for automatic clock in/out on page load.
+ * Handle URL query parameters for automatic clock in/out and page navigation on page load.
  *
  * - `?clock-in=true`  — Clocks in automatically if no shift is already in progress.
  * - `?clock-out=true` — Clocks out automatically if a shift is currently in progress.
+ * - `?page=hour`      — Navigates to the Hours View on load.
+ * - `?page=data`      — Navigates to the Data Viewer on load.
+ * - `?page=about`     — Navigates to the About view on load.
  *
- * Either parameter does nothing when the precondition is not met (i.e. clocking
+ * Either clock parameter does nothing when the precondition is not met (i.e. clocking
  * in while already clocked in, or clocking out while already clocked out).
+ * Any other value for `page`, or no `page` parameter, loads the default Time Entries view.
  *
  * @param {string} [search] - URL search string to parse (defaults to
  *   `window.location.search`).  Pass an explicit value in tests.
@@ -69,6 +74,15 @@ function handleUrlParams(search) {
       clockOutEntry(open);
       saveEntries(entries);
       renderTimeEntries();
+    }
+  }
+
+  const pageParam = params.get("page");
+  if (pageParam !== null && typeof showTab === "function") {
+    const pageTabMap = { hour: "hours-view", data: "data-viewer", about: "about" };
+    const tab = pageTabMap[pageParam];
+    if (tab) {
+      showTab(tab);
     }
   }
 }
