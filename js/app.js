@@ -34,6 +34,44 @@
  */
 
 /* global initTimeEntriesView, initHoursView */
+/* global loadEntries, saveEntries, getOpenEntry, createEntry, clockOutEntry, renderTimeEntries */
+
+// ── URL Parameter Handling ──────────────────────────────────────────────────
+
+/**
+ * Handle URL query parameters for automatic clock in/out on page load.
+ *
+ * - `?clock-in=true`  — Clocks in automatically if no shift is already in progress.
+ * - `?clock-out=true` — Clocks out automatically if a shift is currently in progress.
+ *
+ * Either parameter does nothing when the precondition is not met (i.e. clocking
+ * in while already clocked in, or clocking out while already clocked out).
+ *
+ * @param {string} [search] - URL search string to parse (defaults to
+ *   `window.location.search`).  Pass an explicit value in tests.
+ */
+function handleUrlParams(search) {
+  const params = new URLSearchParams(
+    search !== undefined ? search : window.location.search
+  );
+
+  if (params.get("clock-in") === "true") {
+    const entries = loadEntries();
+    if (!getOpenEntry(entries)) {
+      entries.push(createEntry());
+      saveEntries(entries);
+      renderTimeEntries();
+    }
+  } else if (params.get("clock-out") === "true") {
+    const entries = loadEntries();
+    const open = getOpenEntry(entries);
+    if (open) {
+      clockOutEntry(open);
+      saveEntries(entries);
+      renderTimeEntries();
+    }
+  }
+}
 
 // ── Application Initialization ──────────────────────────────────────────────
 
@@ -52,6 +90,9 @@ function initApp() {
     initHoursView();
   }
 
+  // Handle any URL parameters for automatic clock in/out
+  handleUrlParams();
+
   // Log successful initialization
   console.log("Carrier Helper initialized");
 }
@@ -61,4 +102,10 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initApp);
 } else {
   initApp();
+}
+
+// ── Export for testing (Node.js environment) ───────────────────────────────
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { handleUrlParams };
 }
