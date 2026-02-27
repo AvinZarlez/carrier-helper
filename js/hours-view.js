@@ -45,6 +45,7 @@ const hvWeekPicker = document.getElementById("hv-week-picker");
 const hvMonthPicker = document.getElementById("hv-month-picker");
 const hvYearPicker = document.getElementById("hv-year-picker");
 const hvMonthGrid = document.getElementById("hv-month-grid");
+const hvMonthYearBtns = document.getElementById("hv-month-year-btns");
 const hvYearBtns = document.getElementById("hv-year-btns");
 
 // ── State ───────────────────────────────────────────────────────────────────
@@ -575,6 +576,18 @@ function renderHoursView() {
     hvDatePicker.value = toLocalDateString(hvCurrentDate.toISOString());
   } else if (hvPeriodType === "month") {
     const curMonth = hvCurrentDate.getMonth();
+    const curYear = hvCurrentDate.getFullYear();
+    const yearsSet = new Set(
+      allEntries
+        .filter(e => e.clockIn)
+        .map(e => new Date(e.clockIn).getFullYear())
+        .filter(y => !isNaN(y))
+    );
+    yearsSet.add(curYear);
+    const years = Array.from(yearsSet).sort((a, b) => a - b);
+    hvMonthYearBtns.innerHTML = years.map(y =>
+      `<button class="hv-year-btn${y === curYear ? " active" : ""}" data-year="${y}">${y}</button>`
+    ).join("");
     hvMonthGrid.innerHTML = MONTH_SHORT_NAMES.map((name, i) =>
       `<button class="hv-month-btn${i === curMonth ? " active" : ""}" data-month="${i}">${name}</button>`
     ).join("");
@@ -680,6 +693,15 @@ function initHoursView() {
     if (!btn) return;
     const month = parseInt(btn.dataset.month, 10);
     hvCurrentDate = new Date(hvCurrentDate.getFullYear(), month, 1, 0, 0, 0, 0);
+    renderHoursView();
+  });
+
+  // Month view year buttons (event delegation)
+  hvMonthYearBtns.addEventListener("click", (e) => {
+    const btn = e.target.closest(".hv-year-btn");
+    if (!btn) return;
+    const year = parseInt(btn.dataset.year, 10);
+    hvCurrentDate = new Date(year, hvCurrentDate.getMonth(), 1, 0, 0, 0, 0);
     renderHoursView();
   });
 

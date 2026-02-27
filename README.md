@@ -6,20 +6,56 @@
 [![Run Tests](https://github.com/AvinZarlez/carrier-helper/actions/workflows/test.yml/badge.svg)](https://github.com/AvinZarlez/carrier-helper/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-A simple web application designed to help mail carriers track their shifts and hours. Clock in and out with a single click, and view all your time entries in a clean spreadsheet-style interface — right in your browser, no account required.
+**Your shift tracker, your data.** Carrier Helper is a free, no-account-required time tracker built for mail carriers. Clock in and out with one tap, then see exactly how many hours you worked and what you earned — right in your browser, on any device.
 
-## What It Does
+---
 
-- **One-click time tracking** — press "Clock In" when your shift starts and "Clock Out" when it ends.
-- **Current / Last Shift display** — while clocked in, the top section shows your active "Current Shift". When clocked out, it automatically switches to a "Last Shift" view showing your most recent completed entry.
-- **Collapsible sections** — the Current/Last Shift and Previous Shifts panels can each be collapsed with the ▼ toggle button to keep the screen tidy.
-- **Local storage** — all entries are saved directly in your browser; no server or login needed.
-- **Previous Shifts** — recent completed shifts shown for quick reference, alongside actions to edit or delete individual entries.
-- **Spreadsheet view** — every clock-in and clock-out entry is displayed in a table in the Data Viewer tab so you can review your full history at a glance.
-- **Meta Data / Pay Scale** — store your USPS pay scale settings (base rate, overtime multipliers, night differential, Sunday premium, and thresholds) in the Meta Data sub-tab of the Data Viewer.
-- **CSV export / import** — export time entries for the current view, export metadata, or export all data at once. Import auto-detects the CSV type (time entries, metadata, or combined).
-- **Cloud sync (optional)** — sign in with a free account to sync entries and pay-scale settings across all your devices via Firebase.
+## ⚡ Quick Start
+
+1. Open the [live app](https://avinzarlez.github.io/carrier-helper) — no install, no sign-in required.
+2. Press **Clock In** when your shift starts.
+3. Press **Clock Out** when it ends.
+4. Head to **Hours View** to see your hours and estimated pay.
+
+That's it. Your data is saved automatically in your browser.
+
+---
+
+## Features
+
+### 🕐 One-Tap Time Tracking
+
+Hit **Clock In** and **Clock Out** — the app handles the rest. Your active shift is always visible at the top of the screen with a live timer.
+
+### 📊 Hours View — Pay Breakdown by Week, Month, or Year
+
+Switch between weekly, monthly, and yearly summaries to see:
+
+- **Total hours** worked in any period
+- Breakdown by **base hours**, **overtime**, and **penalty overtime**
+- **Night differential** and **Sunday premium** hours
+- **Estimated pay** calculated from your pay rate settings
+
+Navigate any period with ‹ Prev / Next › buttons, jump to a specific week with the date picker, click any month or year directly, or hit **This Week / This Month** to snap back to today.
+
+### 💾 Your Data Stays With You
+
+All data is stored locally in your browser — no server, no account. Back up or move your data at any time with CSV export:
+
+- Export everything (entries + pay settings) as a single file
+- Import it on any other browser or device
+- All imports are non-destructive by default (merge, not replace)
+
+### ☁️ Optional Cloud Sync
+
+Want your shifts on every device automatically? Connect a free Firebase account and every clock-in, clock-out, and settings change syncs in real time. Fully opt-in — the app works completely offline without it.
+
+### 📱 Works on Mobile and Web
+
+The app is fully responsive and works on any screen, from a 320 px phone to a widescreen desktop. No app store download required.
+
+---
 
 ## Documentation
 
-For technical details, setup instructions, and guides on forking and deploying your own version, see the **[docs/ folder](docs/README.md)**.
+For guides on data management, cloud sync setup, and how to deploy your own copy, see the **[docs/ folder](docs/README.md)**.

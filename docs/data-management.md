@@ -112,6 +112,30 @@ These values are used by the **Hours View** to calculate estimated pay breakdown
 
 ---
 
+## Hours View — Period Navigation
+
+The **Hours View** tab summarises your hours and estimated pay for any week, month, or year.
+
+### Period Types
+
+| Mode | What you see | Row breakdown |
+| --- | --- | --- |
+| **Week** | One row per day (Mon–Sun) | Day-by-day totals |
+| **Month** | One row per week whose Monday falls in the month | Week-by-week totals |
+| **Year** | One row per month | Month-by-month totals |
+
+### Date Navigation
+
+Use the **‹ Prev** and **Next ›** buttons to move one period at a time.
+
+Each mode also has a dedicated picker:
+
+- **Week** — a date input lets you jump to any specific date, plus a **This Week** button that snaps back to the current calendar week.
+- **Month** — a year row (showing only years that have data) and a month grid. Click any year to switch years without leaving the month view, then click any month to view it. A **This Month** button snaps back to the current month.
+- **Year** — a row of buttons, one per year that has data. Click any year to jump to it directly.
+
+---
+
 ## Cloud Sync (Cross-Device / Cross-Browser)
 
 For automatic, real-time synchronisation across all your devices, you can enable Cloud Sync powered by Firebase.
