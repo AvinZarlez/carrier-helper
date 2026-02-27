@@ -242,10 +242,12 @@ function renderTimeEntries() {
   const last = open ? null : getLastShiftEntry(entries);
   const previous = getPreviousShiftsEntries(entries, open);
 
-  // Compute which dates appear more than once across all displayed entries
+  // Compute which dates appear more than once across all displayed entries.
+  // Deduplicate: `last` is always part of `previous`, so skip it here to
+  // avoid double-counting its date and triggering a false highlight.
   const allDisplayed = [];
   if (open) allDisplayed.push(open);
-  else if (last) allDisplayed.push(last);
+  else if (last && !previous.some((e) => e.id === last.id)) allDisplayed.push(last);
   allDisplayed.push(...previous);
   const dateCounts = {};
   allDisplayed.forEach((e) => {
