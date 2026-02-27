@@ -81,9 +81,10 @@ function toLocalDateString(isoString) {
 /**
  * Build the HTML string for a row in the current-shift table (no row number).
  * @param {Object} entry
+ * @param {boolean} [highlight] - Whether to apply the same-day duplicate highlight
  * @returns {string} HTML table row
  */
-function buildCurrentShiftRow(entry) {
+function buildCurrentShiftRow(entry, highlight) {
   const date = formatDate(entry.clockIn);
   const clockIn = formatTime(entry.clockIn);
   const clockOut = `<span class="pending-cell">In progress…</span>`;
@@ -92,7 +93,7 @@ function buildCurrentShiftRow(entry) {
     ? `<span class="notes-cell" title="${entry.notes.replace(/"/g, "&quot;")}">${entry.notes}</span>`
     : `<span class="pending-cell">—</span>`;
   return `
-    <tr data-id="${entry.id}">
+    <tr data-id="${entry.id}"${highlight ? ' class="same-day-highlight"' : ''}>
       <td>${date}</td>
       <td>${clockIn}</td>
       <td>${clockOut}</td>
@@ -108,9 +109,10 @@ function buildCurrentShiftRow(entry) {
 /**
  * Build the HTML string for a completed entry shown in the last-shift table (no row number).
  * @param {Object} entry
+ * @param {boolean} [highlight] - Whether to apply the same-day duplicate highlight
  * @returns {string} HTML table row
  */
-function buildLastShiftRow(entry) {
+function buildLastShiftRow(entry, highlight) {
   const date = formatDate(entry.clockIn);
   const clockIn = formatTime(entry.clockIn);
   const clockOut = formatTime(entry.clockOut);
@@ -122,7 +124,7 @@ function buildLastShiftRow(entry) {
     ? `<span class="notes-cell" title="${entry.notes.replace(/"/g, "&quot;")}">${entry.notes}</span>`
     : `<span class="pending-cell">—</span>`;
   return `
-    <tr data-id="${entry.id}">
+    <tr data-id="${entry.id}"${highlight ? ' class="same-day-highlight"' : ''}>
       <td>${date}</td>
       <td>${clockIn}</td>
       <td>${clockOut}</td>
@@ -139,9 +141,10 @@ function buildLastShiftRow(entry) {
  * Build the HTML string for a row in the previous-shifts table (includes row number).
  * @param {Object} entry
  * @param {number} rowNum - Display row number
+ * @param {boolean} [highlight] - Whether to apply the same-day duplicate highlight
  * @returns {string} HTML table row
  */
-function buildPreviousShiftRow(entry, rowNum) {
+function buildPreviousShiftRow(entry, rowNum, highlight) {
   const date = formatDate(entry.clockIn);
   const clockIn = formatTime(entry.clockIn);
   const clockOut = entry.clockOut
@@ -155,7 +158,7 @@ function buildPreviousShiftRow(entry, rowNum) {
     ? `<span class="notes-cell" title="${entry.notes.replace(/"/g, "&quot;")}">${entry.notes}</span>`
     : `<span class="pending-cell">—</span>`;
   return `
-    <tr data-id="${entry.id}">
+    <tr data-id="${entry.id}"${highlight ? ' class="same-day-highlight"' : ''}>
       <td>${rowNum}</td>
       <td>${date}</td>
       <td>${clockIn}</td>
@@ -217,6 +220,7 @@ function getPreviousShiftsEntries(allEntries, openEntry) {
 /**
  * Render the time entries view and update the clock button state.
  * Shows the current in-progress entry and recent previous shifts.
+ * Rows sharing a calendar day with another displayed row are highlighted.
  */
 function renderTimeEntries() {
   const entries = loadEntries();
@@ -235,25 +239,37 @@ function renderTimeEntries() {
     statusValue.className = "status-out";
   }
 
+  const last = open ? null : getLastShiftEntry(entries);
+  const previous = getPreviousShiftsEntries(entries, open);
+
+  // Compute which dates appear more than once across all displayed entries
+  const allDisplayed = [];
+  if (open) allDisplayed.push(open);
+  else if (last) allDisplayed.push(last);
+  allDisplayed.push(...previous);
+  const dateCounts = {};
+  allDisplayed.forEach((e) => {
+    const dateStr = toLocalDateString(e.clockIn);
+    dateCounts[dateStr] = (dateCounts[dateStr] || 0) + 1;
+  });
+  const duplicateDates = new Set(
+    Object.keys(dateCounts).filter((d) => dateCounts[d] > 1)
+  );
+
   // ── Current / Last Shift ────────────────────────────────────────────────
   if (open) {
     currentShiftTitle.textContent = "Current Shift";
     currentShiftPanel.style.display = "";
-    currentShiftBody.innerHTML = buildCurrentShiftRow(open);
+    currentShiftBody.innerHTML = buildCurrentShiftRow(open, duplicateDates.has(toLocalDateString(open.clockIn)));
+  } else if (last) {
+    currentShiftTitle.textContent = "Last Shift";
+    currentShiftPanel.style.display = "";
+    currentShiftBody.innerHTML = buildLastShiftRow(last, duplicateDates.has(toLocalDateString(last.clockIn)));
   } else {
-    const last = getLastShiftEntry(entries);
-    if (last) {
-      currentShiftTitle.textContent = "Last Shift";
-      currentShiftPanel.style.display = "";
-      currentShiftBody.innerHTML = buildLastShiftRow(last);
-    } else {
-      currentShiftPanel.style.display = "none";
-    }
+    currentShiftPanel.style.display = "none";
   }
 
   // ── Previous Shifts ─────────────────────────────────────────────────────
-  const previous = getPreviousShiftsEntries(entries, open);
-
   if (previous.length === 0) {
     entriesBody.innerHTML = "";
     emptyMsg.style.display = "block";
@@ -262,7 +278,7 @@ function renderTimeEntries() {
 
   emptyMsg.style.display = "none";
   entriesBody.innerHTML = previous
-    .map((entry, idx) => buildPreviousShiftRow(entry, previous.length - idx))
+    .map((entry, idx) => buildPreviousShiftRow(entry, previous.length - idx, duplicateDates.has(toLocalDateString(entry.clockIn))))
     .join("");
 }
 

@@ -937,6 +937,11 @@ tbody tr:hover {
   background: #ebf8ff !important;
 }
 
+/* ── Same-day duplicate highlight ── */
+tbody tr.same-day-highlight td {
+  background-color: #fefce8;
+}
+
 /* ── Select All button (data viewer header) ── */
 .btn-select-all {
   background: #e2e8f0;
