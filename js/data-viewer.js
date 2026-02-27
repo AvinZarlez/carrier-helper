@@ -2,67 +2,41 @@
  * data-viewer.js — Data Viewer View for Carrier Helper
  *
  * This file manages the Data Viewer view which provides a
- * spreadsheet view of all entries with edit/delete capabilities,
- * and data import/export functionality.
+ * read-only spreadsheet view of all entries with week/custom range
+ * navigation and multi-select capabilities.
  *
  * RESPONSIBILITIES:
  * - Data Viewer table rendering
- * - Export to CSV functionality
- * - Import from CSV (both modes: add/merge and replace)
- * - Tab navigation between views
- * - Edit entry modal (shared with Time Entries view)
+ * - Week and custom range navigation
+ * - View mode switching (week vs custom range)
+ * - Multi-select / checkbox logic
+ * - Row action event delegation (delete, edit)
  *
  * DEPENDENCIES:
  * - common.js (must be loaded first for shared utilities)
+ * - edit-modal.js (for openEditModal)
  *
  * WHAT BELONGS HERE:
- * - All DOM manipulation for the Data Viewer view
- * - Import/export event handlers
- * - Tab switching logic
- * - CSV file handling
- * - Edit entry modal logic
+ * - Data viewer table rendering and navigation
+ * - Multi-select state and UI
  *
  * WHAT DOES NOT BELONG HERE:
- * - Time Entries specific logic (see time-entries.js)
+ * - Tab navigation (see tab-navigation.js)
+ * - Edit modal (see edit-modal.js)
+ * - Import/export (see data-management.js)
  * - Cloud sync logic (see cloud-sync.js)
  * - Shared utilities (see common.js)
  */
 
-/* global loadEntries, saveEntries, mergeEntries, formatDate, formatTime */
-/* global formatDuration, parseCSV, generateCSV, renderTimeEntries, validateEntry */
-/* global validateNoOverlap, validateSingleOpenEntry */
-/* global loadMetaData, saveMetaData, generateMetaDataCSV, parseMetaDataCSV */
-/* global detectCSVType, generateAllDataCSV, parseAllDataCSV, renderMetaDataForm */
-/* global getExportEntries, renderHoursView */
+/* global loadEntries, saveEntries, formatDate, formatTime */
+/* global formatDuration, renderTimeEntries */
+/* global openEditModal, exportToCSV */
 
 // ── DOM References ──────────────────────────────────────────────────────────
-
-// Tab navigation
-const navTimeEntries = document.getElementById("nav-time-entries");
-const navDataViewer = document.getElementById("nav-data-viewer");
-const navHoursView = document.getElementById("nav-hours-view");
-const navAbout = document.getElementById("nav-about");
-const timeEntriesView = document.getElementById("time-entries-view");
-const dataViewerView = document.getElementById("data-viewer-view");
-const hoursView = document.getElementById("hours-view");
-const aboutView = document.getElementById("about-view");
 
 // Data Viewer elements
 const dvBody = document.getElementById("dv-body");
 const dvEmptyMsg = document.getElementById("dv-empty-msg");
-const exportBtn = document.getElementById("export-btn");
-const exportRangeBtn = document.getElementById("export-range-btn");
-const exportRangeForm = document.getElementById("export-range-form");
-const exportRangeStartEl = document.getElementById("export-range-start");
-const exportRangeEndEl = document.getElementById("export-range-end");
-const exportRangeConfirmBtn = document.getElementById("export-range-confirm-btn");
-const exportRangeCancelBtn = document.getElementById("export-range-cancel-btn");
-const importAddBtn = document.getElementById("import-add-btn");
-const importReplaceBtn = document.getElementById("import-replace-btn");
-const importFileInput = document.getElementById("import-file-input");
-const deleteAllBtn = document.getElementById("delete-all-btn");
-const dataMgmtBodyWrapper = document.getElementById("data-mgmt-body");
-const dataMgmtToggleBtn = document.getElementById("data-mgmt-toggle");
 
 // Week navigation elements
 const dvPrevWeekBtn = document.getElementById("dv-prev-week");
@@ -88,17 +62,6 @@ const dvDownloadSelectedBtn = document.getElementById("dv-download-selected-btn"
 const dvDeleteSelectedBtn = document.getElementById("dv-delete-selected-btn");
 const dvDeselectAllBtn = document.getElementById("dv-deselect-all-btn");
 const dvSelectAllBtn = document.getElementById("dv-select-all-btn");
-
-// Sub-tab navigation
-const dvSubTimeEntries = document.getElementById("dv-sub-time-entries");
-const dvSubMetaData = document.getElementById("dv-sub-meta-data");
-const dvTimeEntriesSub = document.getElementById("dv-time-entries-sub");
-const dvMetaDataSub = document.getElementById("dv-meta-data-sub");
-const exportAllBtn = document.getElementById("export-all-btn");
-const exportMetaDataBtn = document.getElementById("export-metadata-btn");
-
-/** Currently active data-viewer sub-tab: "time-entries" or "meta-data". */
-let activeSubTab = "time-entries";
 
 // ── Week Navigation Helpers ─────────────────────────────────────────────────
 
@@ -270,100 +233,6 @@ function deleteSelected() {
   if (typeof renderTimeEntries === "function") renderTimeEntries();
 }
 
-// ── Tab Navigation ──────────────────────────────────────────────────────────
-
-/**
- * Switch between Time Entries and Data Viewer tabs.
- * @param {string} tab - "time-entries" or "data-viewer"
- */
-function showTab(tab) {
-  if (tab === "data-viewer") {
-    timeEntriesView.style.display = "none";
-    hoursView.style.display = "none";
-    aboutView.style.display = "none";
-    dataViewerView.style.display = "block";
-    navTimeEntries.classList.remove("active");
-    navHoursView.classList.remove("active");
-    navAbout.classList.remove("active");
-    navDataViewer.classList.add("active");
-    if (activeSubTab === "meta-data") {
-      if (typeof renderMetaDataForm === "function") renderMetaDataForm();
-    } else {
-      renderDataViewer();
-    }
-  } else if (tab === "hours-view") {
-    clearSelection();
-    timeEntriesView.style.display = "none";
-    dataViewerView.style.display = "none";
-    aboutView.style.display = "none";
-    hoursView.style.display = "block";
-    navTimeEntries.classList.remove("active");
-    navDataViewer.classList.remove("active");
-    navAbout.classList.remove("active");
-    navHoursView.classList.add("active");
-    if (typeof renderHoursView === "function") renderHoursView();
-  } else if (tab === "about") {
-    timeEntriesView.style.display = "none";
-    dataViewerView.style.display = "none";
-    hoursView.style.display = "none";
-    aboutView.style.display = "block";
-    navTimeEntries.classList.remove("active");
-    navDataViewer.classList.remove("active");
-    navHoursView.classList.remove("active");
-    navAbout.classList.add("active");
-  } else {
-    clearSelection();
-    dataViewerView.style.display = "none";
-    hoursView.style.display = "none";
-    aboutView.style.display = "none";
-    timeEntriesView.style.display = "block";
-    navDataViewer.classList.remove("active");
-    navHoursView.classList.remove("active");
-    navAbout.classList.remove("active");
-    navTimeEntries.classList.add("active");
-  }
-}
-
-navTimeEntries.addEventListener("click", () => showTab("time-entries"));
-navDataViewer.addEventListener("click", () => showTab("data-viewer"));
-navHoursView.addEventListener("click", () => showTab("hours-view"));
-navAbout.addEventListener("click", () => showTab("about"));
-
-// ── Data Viewer Sub-tab Navigation ──────────────────────────────────────────
-
-/**
- * Switch between Time Entries and Meta Data sub-tabs within the Data Viewer.
- * @param {string} subTab - "time-entries" or "meta-data"
- */
-function showSubTab(subTab) {
-  activeSubTab = subTab;
-  if (subTab === "meta-data") {
-    clearSelection();
-    dvTimeEntriesSub.style.display = "none";
-    dvMetaDataSub.style.display = "block";
-    dvSubTimeEntries.classList.remove("active");
-    dvSubMetaData.classList.add("active");
-    if (typeof renderMetaDataForm === "function") renderMetaDataForm();
-  } else {
-    dvMetaDataSub.style.display = "none";
-    dvTimeEntriesSub.style.display = "block";
-    dvSubMetaData.classList.remove("active");
-    dvSubTimeEntries.classList.add("active");
-    renderDataViewer();
-  }
-}
-
-dvSubTimeEntries.addEventListener("click", () => showSubTab("time-entries"));
-dvSubMetaData.addEventListener("click", () => showSubTab("meta-data"));
-
-// ── Data Management Collapse Toggle ─────────────────────────────────────────
-
-dataMgmtToggleBtn.addEventListener("click", () => {
-  const isCollapsed = dataMgmtBodyWrapper.classList.toggle("collapsed");
-  dataMgmtToggleBtn.classList.toggle("collapsed", isCollapsed);
-  dataMgmtToggleBtn.setAttribute("aria-expanded", String(!isCollapsed));
-});
-
 // ── Data Viewer Rendering ───────────────────────────────────────────────────
 
 /**
@@ -522,99 +391,6 @@ dvBody.addEventListener("click", (event) => {
   openEditModal(editBtn.dataset.editId);
 });
 
-// ── Edit Entry Modal ────────────────────────────────────────────────────────
-
-/** Currently-edited entry id */
-let currentEditId = null;
-
-/**
- * Convert an ISO timestamp to a value suitable for a datetime-local input.
- * Uses manual local-time construction (not toISOString) because datetime-local
- * inputs expect local time, not UTC.
- * @param {string} iso - ISO-8601 timestamp
- * @returns {string} Local datetime string (YYYY-MM-DDTHH:MM:SS)
- */
-function isoToDatetimeLocal(iso) {
-  if (!iso) return "";
-  const d = new Date(iso);
-  const pad = (n) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
-}
-
-/**
- * Open the edit entry modal pre-filled with the given entry's data.
- * @param {string} entryId - The id of the entry to edit
- */
-function openEditModal(entryId) {
-  const entry = loadEntries().find((e) => e.id === entryId);
-  if (!entry) return;
-
-  currentEditId = entryId;
-  document.getElementById("editClockIn").value = isoToDatetimeLocal(entry.clockIn);
-  document.getElementById("editClockOut").value = isoToDatetimeLocal(entry.clockOut);
-  document.getElementById("editNotes").value = entry.notes || "";
-  document.getElementById("editError").style.display = "none";
-  document.getElementById("editEntryModal").style.display = "flex";
-}
-
-/**
- * Close the edit entry modal without saving.
- */
-function closeEditModal() {
-  document.getElementById("editEntryModal").style.display = "none";
-  currentEditId = null;
-}
-
-/**
- * Save the currently-edited entry after validating.
- * Shows an error message if the entry is invalid.
- */
-function saveEditEntry() {
-  const clockInLocal = document.getElementById("editClockIn").value;
-  const clockOutLocal = document.getElementById("editClockOut").value;
-  const notes = document.getElementById("editNotes").value;
-  const errorEl = document.getElementById("editError");
-
-  const clockIn = clockInLocal ? new Date(clockInLocal).toISOString() : "";
-  const clockOut = clockOutLocal ? new Date(clockOutLocal).toISOString() : null;
-
-  const updatedEntry = { id: currentEditId, clockIn, clockOut, notes };
-
-  if (!validateEntry(updatedEntry)) {
-    errorEl.textContent =
-      "Invalid entry: clock-in must be a valid time, and clock-out (if set) must be after clock-in.";
-    errorEl.style.display = "block";
-    return;
-  }
-
-  const entries = loadEntries();
-
-  if (!validateNoOverlap(updatedEntry, entries)) {
-    errorEl.textContent =
-      "Invalid entry: this entry's time range overlaps with an existing entry.";
-    errorEl.style.display = "block";
-    return;
-  }
-
-  if (!validateSingleOpenEntry(updatedEntry, entries)) {
-    errorEl.textContent =
-      "Invalid entry: an in-progress entry (no clock-out) must be the most recent entry. Remove or update newer entries first.";
-    errorEl.style.display = "block";
-    return;
-  }
-
-  errorEl.style.display = "none";
-  const idx = entries.findIndex((e) => e.id === currentEditId);
-  if (idx !== -1) {
-    entries[idx] = updatedEntry;
-    saveEntries(entries);
-  }
-
-  closeEditModal();
-  renderDataViewer();
-  if (typeof renderTimeEntries === "function") renderTimeEntries();
-}
-
 // ── Week Navigation Event Handlers ─────────────────────────────────────────
 
 dvPrevWeekBtn.addEventListener("click", () => {
@@ -713,301 +489,17 @@ dvSelectAllBtn.addEventListener("click", () => {
   updateSelectionBanner();
 });
 
-dvDownloadSelectedBtn.addEventListener("click", exportToCSV);
+dvDownloadSelectedBtn.addEventListener("click", () => {
+  if (typeof exportToCSV === "function") exportToCSV();
+});
 dvDeleteSelectedBtn.addEventListener("click", deleteSelected);
 dvDeselectAllBtn.addEventListener("click", clearSelection);
-
-// ── Export ──────────────────────────────────────────────────────────────────
-
-/**
- * Export time entries for the current view as CSV.
- * If entries are selected, exports only those. Otherwise exports all entries
- * visible in the current date view (week or custom range).
- * Entries outside the current view range are never included.
- */
-function exportToCSV() {
-  // Default to week mode bounds; override if a valid custom range is active
-  let viewStart = currentWeekStart;
-  let viewEnd = new Date(currentWeekStart);
-  viewEnd.setDate(viewEnd.getDate() + 7); // exclusive upper bound (same as renderDataViewer)
-  let exclusiveEnd = true;
-  if (viewMode === "range" && customRangeStart && customRangeEnd) {
-    viewStart = new Date(customRangeStart + "T00:00:00");
-    viewEnd = new Date(customRangeEnd + "T23:59:59.999");
-    exclusiveEnd = false;
-  }
-
-  const entries = getExportEntries(loadEntries(), selectedEntryIds, viewStart, viewEnd, exclusiveEnd);
-  const csv = generateCSV(entries);
-  const filename = `carrier-helper-${new Date().toISOString().slice(0, 10)}.csv`;
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-/**
- * Export metadata (USPS pay scale settings) as a CSV file.
- */
-function exportMetaDataToCSV() {
-  const meta = loadMetaData();
-  const csv = generateMetaDataCSV(meta);
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `carrier-helper-metadata-${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-/**
- * Export all data (both time entries and metadata) as a single CSV file.
- */
-function exportAllDataToCSV() {
-  const entries = loadEntries();
-  const meta = loadMetaData();
-  const csv = generateAllDataCSV(entries, meta);
-
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `carrier-helper-all-data-${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-exportBtn.addEventListener("click", exportToCSV);
-exportMetaDataBtn.addEventListener("click", exportMetaDataToCSV);
-exportAllBtn.addEventListener("click", exportAllDataToCSV);
-
-// ── Export Date Range ───────────────────────────────────────────────────────
-
-/**
- * Export entries within a user-specified date range to a CSV file.
- */
-function exportRangeToCSV() {
-  const startVal = exportRangeStartEl.value;
-  const endVal = exportRangeEndEl.value;
-
-  if (!startVal || !endVal) {
-    alert("Please select both a start and end date.");
-    return;
-  }
-
-  const start = new Date(startVal + "T00:00:00");
-  const end = new Date(endVal + "T23:59:59.999");
-
-  if (start > end) {
-    alert("Start date must be before or equal to end date.");
-    return;
-  }
-
-  const entries = loadEntries().filter((e) => {
-    const d = new Date(e.clockIn);
-    return d >= start && d <= end;
-  });
-
-  if (entries.length === 0) {
-    alert("No entries found in the selected date range.");
-    return;
-  }
-
-  const csv = generateCSV(entries);
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `carrier-helper-${startVal}-to-${endVal}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-/** Whether the export date range form is currently visible. */
-let exportRangeFormVisible = false;
-
-exportRangeBtn.addEventListener("click", () => {
-  exportRangeFormVisible = !exportRangeFormVisible;
-  if (!exportRangeFormVisible) {
-    exportRangeForm.style.display = "none";
-    return;
-  }
-  // Pre-fill with current view range
-  const range = getCurrentViewRange();
-  exportRangeStartEl.value = dateToInputValue(range.start);
-  exportRangeEndEl.value = dateToInputValue(range.end);
-  exportRangeForm.style.display = "block";
-});
-
-exportRangeConfirmBtn.addEventListener("click", exportRangeToCSV);
-
-exportRangeCancelBtn.addEventListener("click", () => {
-  exportRangeFormVisible = false;
-  exportRangeForm.style.display = "none";
-});
-
-// ── Delete All Local Data ───────────────────────────────────────────────────
-
-deleteAllBtn.addEventListener("click", () => {
-  const count = loadEntries().length;
-  if (
-    !confirm(
-      `⚠️ Delete ALL ${count} local time entries? This cannot be undone.`
-    )
-  )
-    return;
-  // Second confirmation for safety
-  if (
-    !confirm(
-      "Are you sure? All local data will be permanently deleted."
-    )
-  )
-    return;
-  saveEntries([]);
-  renderDataViewer();
-  if (typeof renderTimeEntries === "function") renderTimeEntries();
-});
-
-// ── Import ──────────────────────────────────────────────────────────────────
-
-let importMode = null; // "add" | "replace"
-
-importAddBtn.addEventListener("click", () => {
-  importMode = "add";
-  importFileInput.click();
-});
-
-importReplaceBtn.addEventListener("click", () => {
-  importMode = "replace";
-  importFileInput.click();
-});
-
-/**
- * Handle file selection for import.
- * Auto-detects the CSV type (entries, metadata, or combined) and handles accordingly.
- */
-importFileInput.addEventListener("change", (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const text = e.target.result;
-    const csvType = detectCSVType(text);
-
-    if (csvType === "unknown") {
-      alert("Could not read the CSV file. Make sure it was exported from Carrier Helper.");
-      importFileInput.value = "";
-      return;
-    }
-
-    if (csvType === "all") {
-      // Combined file: import both entries and metadata
-      const parsed = parseAllDataCSV(text);
-      if (!parsed) {
-        alert("Could not parse the combined data file.");
-        importFileInput.value = "";
-        return;
-      }
-      if (importMode === "replace") {
-        if (!confirm(`Replace all data with ${parsed.entries.length} entries and metadata settings from the file? This cannot be undone.`)) {
-          importFileInput.value = "";
-          return;
-        }
-        saveEntries(parsed.entries);
-        if (Object.keys(parsed.meta).length > 0) {
-          saveMetaData({ ...loadMetaData(), ...parsed.meta });
-        }
-      } else {
-        const merged = mergeEntries(loadEntries(), parsed.entries);
-        saveEntries(merged);
-        if (Object.keys(parsed.meta).length > 0) {
-          saveMetaData({ ...loadMetaData(), ...parsed.meta });
-        }
-      }
-      importFileInput.value = "";
-      if (typeof renderTimeEntries === "function") renderTimeEntries();
-      if (typeof renderMetaDataForm === "function") renderMetaDataForm();
-      renderDataViewer();
-      alert(`Import complete. ${loadEntries().length} entries and metadata settings imported.`);
-
-    } else if (csvType === "metadata") {
-      // Metadata only
-      const parsed = parseMetaDataCSV(text);
-      if (!parsed) {
-        alert("Could not parse the metadata CSV file.");
-        importFileInput.value = "";
-        return;
-      }
-      if (importMode === "replace") {
-        if (!confirm("Replace all metadata settings with values from the file? This cannot be undone.")) {
-          importFileInput.value = "";
-          return;
-        }
-        saveMetaData(parsed);
-      } else {
-        saveMetaData({ ...loadMetaData(), ...parsed });
-      }
-      importFileInput.value = "";
-      if (typeof renderMetaDataForm === "function") renderMetaDataForm();
-      alert("Import complete. Metadata settings updated.");
-
-    } else {
-      // Time entries
-      const parsed = parseCSV(text);
-      if (!parsed) {
-        alert("Could not read the CSV file. Make sure it was exported from Carrier Helper.");
-        importFileInput.value = "";
-        return;
-      }
-      if (importMode === "replace") {
-        if (!confirm(`Replace ALL ${loadEntries().length} existing entries with ${parsed.length} entries from the file? This cannot be undone.`)) {
-          importFileInput.value = "";
-          return;
-        }
-        saveEntries(parsed);
-      } else {
-        const merged = mergeEntries(loadEntries(), parsed);
-        saveEntries(merged);
-      }
-      importFileInput.value = "";
-      if (typeof renderTimeEntries === "function") renderTimeEntries();
-      renderDataViewer();
-      alert(`Import complete. ${loadEntries().length} entries now stored.`);
-    }
-  };
-  reader.readAsText(file);
-});
 
 // ── Export for testing (Node.js environment) ───────────────────────────────
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = {
-    showTab,
-    showSubTab,
     renderDataViewer,
-    exportToCSV,
-    exportMetaDataToCSV,
-    exportAllDataToCSV,
-    exportRangeToCSV,
-    openEditModal,
-    closeEditModal,
-    saveEditEntry,
-    isoToDatetimeLocal,
     getWeekStart,
     formatWeekLabel,
     formatRangeLabel,
