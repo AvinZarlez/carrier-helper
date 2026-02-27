@@ -288,6 +288,7 @@ function showTab(tab) {
       renderDataViewer();
     }
   } else if (tab === "hours-view") {
+    clearSelection();
     timeEntriesView.style.display = "none";
     dataViewerView.style.display = "none";
     hoursView.style.display = "block";
@@ -296,6 +297,7 @@ function showTab(tab) {
     navHoursView.classList.add("active");
     if (typeof renderHoursView === "function") renderHoursView();
   } else {
+    clearSelection();
     dataViewerView.style.display = "none";
     hoursView.style.display = "none";
     timeEntriesView.style.display = "block";
@@ -318,6 +320,7 @@ navHoursView.addEventListener("click", () => showTab("hours-view"));
 function showSubTab(subTab) {
   activeSubTab = subTab;
   if (subTab === "meta-data") {
+    clearSelection();
     dvTimeEntriesSub.style.display = "none";
     dvMetaDataSub.style.display = "block";
     dvSubTimeEntries.classList.remove("active");
