@@ -58,6 +58,11 @@ let activeSubTab = "time-entries";
  * @param {string} tab - "time-entries", "hours-view", "data-viewer", or "about"
  */
 function showTab(tab) {
+  // Clear any data-viewer selection when navigating away from it
+  if (tab !== "data-viewer") {
+    clearSelection();
+  }
+
   if (tab === "data-viewer") {
     timeEntriesView.style.display = "none";
     hoursViewEl.style.display = "none";
@@ -73,7 +78,6 @@ function showTab(tab) {
       renderDataViewer();
     }
   } else if (tab === "hours-view") {
-    clearSelection();
     timeEntriesView.style.display = "none";
     dataViewerView.style.display = "none";
     aboutView.style.display = "none";
@@ -93,7 +97,6 @@ function showTab(tab) {
     navHoursView.classList.remove("active");
     navAbout.classList.add("active");
   } else {
-    clearSelection();
     dataViewerView.style.display = "none";
     hoursViewEl.style.display = "none";
     aboutView.style.display = "none";

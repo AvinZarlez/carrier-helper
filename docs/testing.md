@@ -24,6 +24,7 @@ Tests cover the core utility functions in `js/common.js` as well as export/impor
 - Import round-trips for all three CSV formats
 - Merge vs. replace import modes
 - Hours and pay calculations (`getShiftHours`, `calculateNightDiffHours`, `calculateSundayHours`, `calculatePaySummary`)
+- Tab navigation (`showTab`, `showSubTab`) — view visibility, active nav states, selection clearing on tab switch
 
 ### Test Files
 
@@ -34,6 +35,7 @@ Tests cover the core utility functions in `js/common.js` as well as export/impor
 | `tests/export-import.test.js` | Export filtering logic and import/export round-trips for all CSV formats |
 | `tests/hours-calc.test.js` | Hours and pay calculation utilities in `js/common.js` |
 | `tests/app.test.js` | URL parameter handling in `js/app.js` (auto clock-in/out) |
+| `tests/tab-navigation.test.js` | Tab and sub-tab switching in `js/tab-navigation.js` (view visibility, active states, selection clearing) |
 
 ---
 
@@ -133,7 +135,8 @@ tests/
 ├── meta-data.test.js      # Tests for js/common.js metadata utilities
 ├── export-import.test.js  # Tests for export filtering and import/export round-trips
 ├── hours-calc.test.js     # Tests for js/common.js hours/pay calculation utilities
-└── app.test.js            # Tests for js/app.js URL parameter handling
+├── app.test.js            # Tests for js/app.js URL parameter handling
+└── tab-navigation.test.js # Tests for js/tab-navigation.js tab/sub-tab switching
 ```
 
 ### Adding New Tests
