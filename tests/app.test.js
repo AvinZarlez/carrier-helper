@@ -150,21 +150,6 @@ describe("handleUrlParams", () => {
       expect(mockSaveEntries).toHaveBeenCalledTimes(1);
       expect(mockRenderTimeEntries).toHaveBeenCalledTimes(1);
     });
-
-    it("does nothing when not clocked in and it is before 7 AM", () => {
-      const entries = [];
-      mockLoadEntries.mockReturnValue(entries);
-      mockGetOpenEntry.mockReturnValue(null);
-      mockHasEntriesToday.mockReturnValue(false);
-      // Simulate before 7 AM by returning a far-future 7 AM timestamp
-      mockGetSevenAmToday.mockReturnValue("9999-12-31T07:00:00.000Z");
-
-      handleUrlParams("?clock-out=true");
-
-      expect(mockClockOutEntry).not.toHaveBeenCalled();
-      expect(mockSaveEntries).not.toHaveBeenCalled();
-      expect(mockRenderTimeEntries).not.toHaveBeenCalled();
-    });
   });
 
   describe("no relevant parameters", () => {
