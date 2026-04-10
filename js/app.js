@@ -42,7 +42,7 @@
  */
 
 /* global initTimeEntriesView, initHoursView, showTab */
-/* global loadEntries, saveEntries, getOpenEntry, createEntry, clockOutEntry, renderTimeEntries */
+/* global loadEntries, saveEntries, getOpenEntry, createEntry, createEntryAt, hasEntriesToday, getSevenAmToday, clockOutEntry, renderTimeEntries */
 
 // ── URL Parameter Handling ──────────────────────────────────────────────────
 
@@ -77,6 +77,16 @@ function handleUrlParams(search) {
       clockOutEntry(open);
       saveEntries(entries);
       renderTimeEntries();
+    } else {
+      const sevenAmIso = getSevenAmToday();
+      if (new Date() >= new Date(sevenAmIso) && !hasEntriesToday(entries)) {
+        // Auto: create a completed entry clocked in at 7 AM, clocked out now
+        const entry = createEntryAt(sevenAmIso);
+        clockOutEntry(entry);
+        entries.push(entry);
+        saveEntries(entries);
+        renderTimeEntries();
+      }
     }
   }
 }

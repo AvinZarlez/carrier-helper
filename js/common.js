@@ -526,6 +526,39 @@ function createEntry() {
   };
 }
 
+/**
+ * Create a new time entry with a specific clock-in time instead of now.
+ * @param {string} clockInIso - ISO-8601 timestamp for the clock-in time
+ * @returns {{id: string, clockIn: string, clockOut: null, notes: string}}
+ */
+function createEntryAt(clockInIso) {
+  return {
+    id: crypto.randomUUID(),
+    clockIn: clockInIso,
+    clockOut: null,
+    notes: ""
+  };
+}
+
+/**
+ * Return true if any stored entry has a clock-in on today's local date.
+ * @param {Array} entries
+ * @returns {boolean}
+ */
+function hasEntriesToday(entries) {
+  const today = toLocalDateString(new Date().toISOString());
+  return entries.some((e) => toLocalDateString(e.clockIn) === today);
+}
+
+/**
+ * Return an ISO timestamp for 7:00 AM in the local timezone on today's date.
+ * @returns {string} ISO-8601 timestamp for today at 07:00:00.000 local time
+ */
+function getSevenAmToday() {
+  const now = new Date();
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 0, 0, 0).toISOString();
+}
+
 // ── Hours / Pay Calculation Utilities ──────────────────────────────────────
 
 /**
@@ -742,6 +775,9 @@ if (typeof module !== "undefined" && module.exports) {
     filterEntriesByRange,
     getExportEntries,
     createEntry,
+    createEntryAt,
+    hasEntriesToday,
+    getSevenAmToday,
     clockOutEntry,
     toLocalDateString,
     getShiftHours,

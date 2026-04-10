@@ -15,22 +15,32 @@ const mockCreateEntry = jest.fn(() => ({
   clockIn: "2026-02-27T12:00:00.000Z",
   clockOut: null
 }));
+const mockCreateEntryAt = jest.fn((clockIn) => ({
+  id: "test-uuid-at",
+  clockIn,
+  clockOut: null
+}));
 const mockClockOutEntry = jest.fn((entry) => {
   entry.clockOut = new Date().toISOString();
 });
 const mockLoadEntries = jest.fn();
 const mockSaveEntries = jest.fn();
 const mockGetOpenEntry = jest.fn();
+const mockHasEntriesToday = jest.fn();
+const mockGetSevenAmToday = jest.fn();
 const mockRenderTimeEntries = jest.fn();
 const mockInitTimeEntriesView = jest.fn();
 const mockInitHoursView = jest.fn();
 const mockShowTab = jest.fn();
 
 global.createEntry = mockCreateEntry;
+global.createEntryAt = mockCreateEntryAt;
 global.clockOutEntry = mockClockOutEntry;
 global.loadEntries = mockLoadEntries;
 global.saveEntries = mockSaveEntries;
 global.getOpenEntry = mockGetOpenEntry;
+global.hasEntriesToday = mockHasEntriesToday;
+global.getSevenAmToday = mockGetSevenAmToday;
 global.renderTimeEntries = mockRenderTimeEntries;
 global.initTimeEntriesView = mockInitTimeEntriesView;
 global.initHoursView = mockInitHoursView;
@@ -96,16 +106,49 @@ describe("handleUrlParams", () => {
       expect(mockRenderTimeEntries).toHaveBeenCalledTimes(1);
     });
 
-    it("does nothing when not clocked in", () => {
+    it("does nothing when not clocked in and it is before 7 AM with no entries today", () => {
       const entries = [];
       mockLoadEntries.mockReturnValue(entries);
-      mockGetOpenEntry.mockReturnValue(null); // not clocked in
+      mockGetOpenEntry.mockReturnValue(null);
+      mockHasEntriesToday.mockReturnValue(false);
+      // Simulate before 7 AM by returning a far-future 7 AM timestamp
+      mockGetSevenAmToday.mockReturnValue("9999-12-31T07:00:00.000Z");
 
       handleUrlParams("?clock-out=true");
 
       expect(mockClockOutEntry).not.toHaveBeenCalled();
       expect(mockSaveEntries).not.toHaveBeenCalled();
       expect(mockRenderTimeEntries).not.toHaveBeenCalled();
+    });
+
+    it("does nothing when not clocked in and there are already entries today", () => {
+      const entries = [{ id: "1", clockIn: new Date().toISOString(), clockOut: "2026-02-27T15:00:00.000Z" }];
+      mockLoadEntries.mockReturnValue(entries);
+      mockGetOpenEntry.mockReturnValue(null);
+      mockHasEntriesToday.mockReturnValue(true);
+      mockGetSevenAmToday.mockReturnValue("2026-02-27T07:00:00.000Z"); // past 7 AM
+
+      handleUrlParams("?clock-out=true");
+
+      expect(mockClockOutEntry).not.toHaveBeenCalled();
+      expect(mockSaveEntries).not.toHaveBeenCalled();
+      expect(mockRenderTimeEntries).not.toHaveBeenCalled();
+    });
+
+    it("auto creates a 7 AM clock-in and clocks out when not clocked in, after 7 AM, no entries today", () => {
+      const entries = [];
+      mockLoadEntries.mockReturnValue(entries);
+      mockGetOpenEntry.mockReturnValue(null);
+      mockHasEntriesToday.mockReturnValue(false);
+      const sevenAmIso = "2026-02-27T07:00:00.000Z";
+      mockGetSevenAmToday.mockReturnValue(sevenAmIso);
+
+      handleUrlParams("?clock-out=true");
+
+      expect(mockCreateEntryAt).toHaveBeenCalledWith(sevenAmIso);
+      expect(mockClockOutEntry).toHaveBeenCalledTimes(1);
+      expect(mockSaveEntries).toHaveBeenCalledTimes(1);
+      expect(mockRenderTimeEntries).toHaveBeenCalledTimes(1);
     });
   });
 

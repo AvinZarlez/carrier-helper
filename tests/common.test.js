@@ -5,7 +5,7 @@
  * - Storage operations (loadEntries, saveEntries)
  * - Formatting helpers (formatDate, formatTime, formatDuration)
  * - CSV utilities (parseCSV, splitCSVLine, generateCSV)
- * - Entry operations (mergeEntries, getOpenEntry, createEntry, clockOutEntry)
+ * - Entry operations (mergeEntries, getOpenEntry, createEntry, createEntryAt, clockOutEntry, hasEntriesToday, getSevenAmToday)
  */
 
 const {
@@ -24,6 +24,9 @@ const {
   validateNoOverlap,
   validateSingleOpenEntry,
   createEntry,
+  createEntryAt,
+  hasEntriesToday,
+  getSevenAmToday,
   clockOutEntry
 } = require('../js/common.js');
 
@@ -385,6 +388,78 @@ describe('Entry Operations', () => {
       expect(entry.clockOut).toBeDefined();
       expect(entry.clockOut >= before).toBe(true);
       expect(entry.clockOut <= after).toBe(true);
+    });
+  });
+
+  describe('getSevenAmToday', () => {
+    it('should return an ISO string for 7:00 AM today in local time', () => {
+      const result = getSevenAmToday();
+      const parsed = new Date(result);
+      const now = new Date();
+      expect(parsed.getFullYear()).toBe(now.getFullYear());
+      expect(parsed.getMonth()).toBe(now.getMonth());
+      expect(parsed.getDate()).toBe(now.getDate());
+      expect(parsed.getHours()).toBe(7);
+      expect(parsed.getMinutes()).toBe(0);
+      expect(parsed.getSeconds()).toBe(0);
+    });
+
+    it('should return an ISO-formatted string', () => {
+      const result = getSevenAmToday();
+      expect(typeof result).toBe('string');
+      expect(() => new Date(result)).not.toThrow();
+    });
+  });
+
+  describe('createEntryAt', () => {
+    it('should create entry with the provided clockIn time', () => {
+      const clockIn = '2024-06-15T07:00:00.000Z';
+      const entry = createEntryAt(clockIn);
+      expect(entry.clockIn).toBe(clockIn);
+    });
+
+    it('should create entry with a unique id', () => {
+      const entry = createEntryAt('2024-06-15T07:00:00.000Z');
+      expect(entry.id).toBeDefined();
+      expect(entry.id.startsWith('test-uuid-')).toBe(true);
+    });
+
+    it('should create entry with null clockOut', () => {
+      const entry = createEntryAt('2024-06-15T07:00:00.000Z');
+      expect(entry.clockOut).toBeNull();
+    });
+
+    it('should create entry with empty notes', () => {
+      const entry = createEntryAt('2024-06-15T07:00:00.000Z');
+      expect(entry.notes).toBe('');
+    });
+  });
+
+  describe('hasEntriesToday', () => {
+    it('should return false for an empty entries array', () => {
+      expect(hasEntriesToday([])).toBe(false);
+    });
+
+    it('should return true when there is an entry for today', () => {
+      const todayIso = new Date().toISOString();
+      const entries = [{ id: '1', clockIn: todayIso, clockOut: null }];
+      expect(hasEntriesToday(entries)).toBe(true);
+    });
+
+    it('should return false when all entries are from a different day', () => {
+      const entries = [
+        { id: '1', clockIn: '2020-01-01T09:00:00.000Z', clockOut: '2020-01-01T17:00:00.000Z' }
+      ];
+      expect(hasEntriesToday(entries)).toBe(false);
+    });
+
+    it('should return true when at least one entry is from today', () => {
+      const todayIso = new Date().toISOString();
+      const entries = [
+        { id: '1', clockIn: '2020-01-01T09:00:00.000Z', clockOut: '2020-01-01T17:00:00.000Z' },
+        { id: '2', clockIn: todayIso, clockOut: null }
+      ];
+      expect(hasEntriesToday(entries)).toBe(true);
     });
   });
 });
