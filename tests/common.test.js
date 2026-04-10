@@ -5,7 +5,7 @@
  * - Storage operations (loadEntries, saveEntries)
  * - Formatting helpers (formatDate, formatTime, formatDuration)
  * - CSV utilities (parseCSV, splitCSVLine, generateCSV)
- * - Entry operations (mergeEntries, getOpenEntry, createEntry, createEntryAt, clockOutEntry, hasEntriesToday)
+ * - Entry operations (mergeEntries, getOpenEntry, createEntry, createEntryAt, clockOutEntry, hasEntriesToday, getSevenAmToday)
  */
 
 const {
@@ -26,6 +26,7 @@ const {
   createEntry,
   createEntryAt,
   hasEntriesToday,
+  getSevenAmToday,
   clockOutEntry
 } = require('../js/common.js');
 
@@ -387,6 +388,26 @@ describe('Entry Operations', () => {
       expect(entry.clockOut).toBeDefined();
       expect(entry.clockOut >= before).toBe(true);
       expect(entry.clockOut <= after).toBe(true);
+    });
+  });
+
+  describe('getSevenAmToday', () => {
+    it('should return an ISO string for 7:00 AM today in local time', () => {
+      const result = getSevenAmToday();
+      const parsed = new Date(result);
+      const now = new Date();
+      expect(parsed.getFullYear()).toBe(now.getFullYear());
+      expect(parsed.getMonth()).toBe(now.getMonth());
+      expect(parsed.getDate()).toBe(now.getDate());
+      expect(parsed.getHours()).toBe(7);
+      expect(parsed.getMinutes()).toBe(0);
+      expect(parsed.getSeconds()).toBe(0);
+    });
+
+    it('should return an ISO-formatted string', () => {
+      const result = getSevenAmToday();
+      expect(typeof result).toBe('string');
+      expect(() => new Date(result)).not.toThrow();
     });
   });
 

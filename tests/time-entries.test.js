@@ -40,6 +40,7 @@ global.clockOutEntry = jest.fn();
 global.createEntry = jest.fn();
 global.createEntryAt = jest.fn((clockIn) => ({ id: "test-uuid-at", clockIn, clockOut: null }));
 global.hasEntriesToday = jest.fn(() => false);
+global.getSevenAmToday = jest.fn(() => "2026-02-27T07:00:00.000Z");
 global.formatDate = jest.fn(() => "");
 global.formatTime = jest.fn(() => "");
 global.formatDuration = jest.fn(() => "");
@@ -157,16 +158,16 @@ describe("handleClockButton", () => {
     jest.clearAllMocks();
     // Restore createEntry to return a valid entry object after clearAllMocks
     global.createEntry.mockReturnValue({ id: "test-uuid", clockIn: "2026-02-27T15:00:00.000Z", clockOut: null });
+    global.createEntryAt.mockImplementation((clockIn) => ({ id: "test-uuid-at", clockIn, clockOut: null }));
   });
 
   it("clocks in (creates new entry) when not clocked in before 7 AM with no entries today", () => {
     const entries = [];
-    global.loadEntries.mockReturnValueOnce(entries).mockReturnValue([]); // 2nd call from renderTimeEntries
+    global.loadEntries.mockReturnValueOnce(entries).mockReturnValue([]);
     global.getOpenEntry.mockReturnValue(null);
     global.hasEntriesToday.mockReturnValue(false);
-
-    const fakeBefore7 = new Date(2026, 1, 27, 6, 0, 0, 0);
-    jest.useFakeTimers().setSystemTime(fakeBefore7);
+    // Simulate before 7 AM by returning a far-future 7 AM timestamp
+    global.getSevenAmToday.mockReturnValue("9999-12-31T07:00:00.000Z");
 
     handleClockButton();
 
@@ -174,8 +175,6 @@ describe("handleClockButton", () => {
     expect(global.createEntryAt).not.toHaveBeenCalled();
     expect(global.clockOutEntry).not.toHaveBeenCalled();
     expect(global.saveEntries).toHaveBeenCalledTimes(1);
-
-    jest.useRealTimers();
   });
 
   it("clocks in (creates new entry) when not clocked in after 7 AM but entries already exist today", () => {
@@ -183,17 +182,13 @@ describe("handleClockButton", () => {
     global.loadEntries.mockReturnValueOnce(entries).mockReturnValue([]);
     global.getOpenEntry.mockReturnValue(null);
     global.hasEntriesToday.mockReturnValue(true);
-
-    const fakeAfter7 = new Date(2026, 1, 27, 15, 0, 0, 0);
-    jest.useFakeTimers().setSystemTime(fakeAfter7);
+    global.getSevenAmToday.mockReturnValue("2026-02-27T07:00:00.000Z"); // past 7 AM
 
     handleClockButton();
 
     expect(global.createEntry).toHaveBeenCalledTimes(1);
     expect(global.createEntryAt).not.toHaveBeenCalled();
     expect(global.saveEntries).toHaveBeenCalledTimes(1);
-
-    jest.useRealTimers();
   });
 
   it("auto creates a 7 AM clock-in and clocks out when not clocked in, after 7 AM, no entries today", () => {
@@ -201,19 +196,15 @@ describe("handleClockButton", () => {
     global.loadEntries.mockReturnValueOnce(entries).mockReturnValue([]);
     global.getOpenEntry.mockReturnValue(null);
     global.hasEntriesToday.mockReturnValue(false);
-
-    const fakeTime = new Date(2026, 1, 27, 15, 0, 0, 0);
-    jest.useFakeTimers().setSystemTime(fakeTime);
+    const sevenAmIso = "2026-02-27T07:00:00.000Z";
+    global.getSevenAmToday.mockReturnValue(sevenAmIso);
 
     handleClockButton();
 
-    const expectedSevenAm = new Date(2026, 1, 27, 7, 0, 0, 0).toISOString();
-    expect(global.createEntryAt).toHaveBeenCalledWith(expectedSevenAm);
+    expect(global.createEntryAt).toHaveBeenCalledWith(sevenAmIso);
     expect(global.clockOutEntry).toHaveBeenCalledTimes(1);
     expect(global.createEntry).not.toHaveBeenCalled();
     expect(global.saveEntries).toHaveBeenCalledTimes(1);
-
-    jest.useRealTimers();
   });
 
   it("clocks out the open entry when clocked in", () => {

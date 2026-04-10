@@ -24,7 +24,7 @@
  * - Shared utilities (see common.js)
  */
 
-/* global loadEntries, saveEntries, getOpenEntry, clockOutEntry, createEntry, createEntryAt, hasEntriesToday */
+/* global loadEntries, saveEntries, getOpenEntry, clockOutEntry, createEntry, createEntryAt, hasEntriesToday, getSevenAmToday */
 /* global formatDate, formatTime, formatDuration, renderDataViewer, openEditModal */
 
 // ── DOM References ──────────────────────────────────────────────────────────
@@ -58,10 +58,10 @@ function handleClockButton() {
     clockOutEntry(open);
   } else {
     const now = new Date();
-    const sevenAm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 0, 0, 0);
-    if (now >= sevenAm && !hasEntriesToday(entries)) {
+    const sevenAmIso = getSevenAmToday();
+    if (now >= new Date(sevenAmIso) && !hasEntriesToday(entries)) {
       // Auto: create a completed entry clocked in at 7 AM, clocked out now
-      const entry = createEntryAt(sevenAm.toISOString());
+      const entry = createEntryAt(sevenAmIso);
       clockOutEntry(entry);
       entries.push(entry);
     } else {

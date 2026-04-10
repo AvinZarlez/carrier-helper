@@ -42,7 +42,7 @@
  */
 
 /* global initTimeEntriesView, initHoursView, showTab */
-/* global loadEntries, saveEntries, getOpenEntry, createEntry, createEntryAt, hasEntriesToday, clockOutEntry, renderTimeEntries */
+/* global loadEntries, saveEntries, getOpenEntry, createEntry, createEntryAt, hasEntriesToday, getSevenAmToday, clockOutEntry, renderTimeEntries */
 
 // ── URL Parameter Handling ──────────────────────────────────────────────────
 
@@ -78,11 +78,10 @@ function handleUrlParams(search) {
       saveEntries(entries);
       renderTimeEntries();
     } else {
-      const now = new Date();
-      const sevenAm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 0, 0, 0);
-      if (now >= sevenAm && !hasEntriesToday(entries)) {
+      const sevenAmIso = getSevenAmToday();
+      if (new Date() >= new Date(sevenAmIso) && !hasEntriesToday(entries)) {
         // Auto: create a completed entry clocked in at 7 AM, clocked out now
-        const entry = createEntryAt(sevenAm.toISOString());
+        const entry = createEntryAt(sevenAmIso);
         clockOutEntry(entry);
         entries.push(entry);
         saveEntries(entries);
