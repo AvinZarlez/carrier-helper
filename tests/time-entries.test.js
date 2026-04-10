@@ -2,6 +2,7 @@
  * time-entries.test.js — Unit tests for time-entries.js
  *
  * Tests cover:
+ * - handleClockButton: clock in, clock out, and auto-7am clock-out behavior
  * - getLastShiftEntry: returns the most recent completed entry
  * - getPreviousShiftsEntries: returns reference-day + most-recent-prior-day entries
  * - Same-day highlight deduplication: last shift should not be double-counted
@@ -37,6 +38,8 @@ global.saveEntries = jest.fn();
 global.getOpenEntry = jest.fn(() => null);
 global.clockOutEntry = jest.fn();
 global.createEntry = jest.fn();
+global.createEntryAt = jest.fn((clockIn) => ({ id: "test-uuid-at", clockIn, clockOut: null }));
+global.hasEntriesToday = jest.fn(() => false);
 global.formatDate = jest.fn(() => "");
 global.formatTime = jest.fn(() => "");
 global.formatDuration = jest.fn(() => "");
@@ -44,6 +47,7 @@ global.renderDataViewer = jest.fn();
 global.openEditModal = jest.fn();
 
 const {
+  handleClockButton,
   getLastShiftEntry,
   getPreviousShiftsEntries,
   toLocalDateString
@@ -143,5 +147,86 @@ describe("same-day highlight deduplication", () => {
     const duplicates = computeDuplicateDates(open, null, previous);
     const dateStr = toLocalDateString(entry.clockIn);
     expect(duplicates.has(dateStr)).toBe(true);
+  });
+});
+
+// ── handleClockButton ────────────────────────────────────────────────────────
+
+describe("handleClockButton", () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Restore createEntry to return a valid entry object after clearAllMocks
+    global.createEntry.mockReturnValue({ id: "test-uuid", clockIn: "2026-02-27T15:00:00.000Z", clockOut: null });
+  });
+
+  it("clocks in (creates new entry) when not clocked in before 7 AM with no entries today", () => {
+    const entries = [];
+    global.loadEntries.mockReturnValueOnce(entries).mockReturnValue([]); // 2nd call from renderTimeEntries
+    global.getOpenEntry.mockReturnValue(null);
+    global.hasEntriesToday.mockReturnValue(false);
+
+    const fakeBefore7 = new Date(2026, 1, 27, 6, 0, 0, 0);
+    jest.useFakeTimers().setSystemTime(fakeBefore7);
+
+    handleClockButton();
+
+    expect(global.createEntry).toHaveBeenCalledTimes(1);
+    expect(global.createEntryAt).not.toHaveBeenCalled();
+    expect(global.clockOutEntry).not.toHaveBeenCalled();
+    expect(global.saveEntries).toHaveBeenCalledTimes(1);
+
+    jest.useRealTimers();
+  });
+
+  it("clocks in (creates new entry) when not clocked in after 7 AM but entries already exist today", () => {
+    const entries = [];
+    global.loadEntries.mockReturnValueOnce(entries).mockReturnValue([]);
+    global.getOpenEntry.mockReturnValue(null);
+    global.hasEntriesToday.mockReturnValue(true);
+
+    const fakeAfter7 = new Date(2026, 1, 27, 15, 0, 0, 0);
+    jest.useFakeTimers().setSystemTime(fakeAfter7);
+
+    handleClockButton();
+
+    expect(global.createEntry).toHaveBeenCalledTimes(1);
+    expect(global.createEntryAt).not.toHaveBeenCalled();
+    expect(global.saveEntries).toHaveBeenCalledTimes(1);
+
+    jest.useRealTimers();
+  });
+
+  it("auto creates a 7 AM clock-in and clocks out when not clocked in, after 7 AM, no entries today", () => {
+    const entries = [];
+    global.loadEntries.mockReturnValueOnce(entries).mockReturnValue([]);
+    global.getOpenEntry.mockReturnValue(null);
+    global.hasEntriesToday.mockReturnValue(false);
+
+    const fakeTime = new Date(2026, 1, 27, 15, 0, 0, 0);
+    jest.useFakeTimers().setSystemTime(fakeTime);
+
+    handleClockButton();
+
+    const expectedSevenAm = new Date(2026, 1, 27, 7, 0, 0, 0).toISOString();
+    expect(global.createEntryAt).toHaveBeenCalledWith(expectedSevenAm);
+    expect(global.clockOutEntry).toHaveBeenCalledTimes(1);
+    expect(global.createEntry).not.toHaveBeenCalled();
+    expect(global.saveEntries).toHaveBeenCalledTimes(1);
+
+    jest.useRealTimers();
+  });
+
+  it("clocks out the open entry when clocked in", () => {
+    const open = { id: "open", clockIn: "2026-02-27T07:00:00.000Z", clockOut: null };
+    const entries = [open];
+    global.loadEntries.mockReturnValueOnce(entries).mockReturnValue([]);
+    global.getOpenEntry.mockReturnValue(open);
+
+    handleClockButton();
+
+    expect(global.clockOutEntry).toHaveBeenCalledWith(open);
+    expect(global.createEntry).not.toHaveBeenCalled();
+    expect(global.createEntryAt).not.toHaveBeenCalled();
+    expect(global.saveEntries).toHaveBeenCalledTimes(1);
   });
 });

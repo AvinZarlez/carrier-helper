@@ -24,7 +24,7 @@
  * - Shared utilities (see common.js)
  */
 
-/* global loadEntries, saveEntries, getOpenEntry, clockOutEntry, createEntry */
+/* global loadEntries, saveEntries, getOpenEntry, clockOutEntry, createEntry, createEntryAt, hasEntriesToday */
 /* global formatDate, formatTime, formatDuration, renderDataViewer, openEditModal */
 
 // ── DOM References ──────────────────────────────────────────────────────────
@@ -45,6 +45,9 @@ const previousShiftsBodyWrapper = document.getElementById("previous-shifts-body-
 /**
  * Handle clock in/out button click.
  * Creates a new entry on clock-in, completes the open entry on clock-out.
+ * Special case: if the button is pressed when not clocked in, it is after 7 AM,
+ * and there are no entries for today, a completed entry is automatically created
+ * with a 7 AM clock-in and the current time as clock-out.
  */
 function handleClockButton() {
   const entries = loadEntries();
@@ -54,8 +57,17 @@ function handleClockButton() {
     // Clock out
     clockOutEntry(open);
   } else {
-    // Clock in
-    entries.push(createEntry());
+    const now = new Date();
+    const sevenAm = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 7, 0, 0, 0);
+    if (now >= sevenAm && !hasEntriesToday(entries)) {
+      // Auto: create a completed entry clocked in at 7 AM, clocked out now
+      const entry = createEntryAt(sevenAm.toISOString());
+      clockOutEntry(entry);
+      entries.push(entry);
+    } else {
+      // Clock in
+      entries.push(createEntry());
+    }
   }
 
   saveEntries(entries);

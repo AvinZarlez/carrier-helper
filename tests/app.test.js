@@ -15,22 +15,30 @@ const mockCreateEntry = jest.fn(() => ({
   clockIn: "2026-02-27T12:00:00.000Z",
   clockOut: null
 }));
+const mockCreateEntryAt = jest.fn((clockIn) => ({
+  id: "test-uuid-at",
+  clockIn,
+  clockOut: null
+}));
 const mockClockOutEntry = jest.fn((entry) => {
   entry.clockOut = new Date().toISOString();
 });
 const mockLoadEntries = jest.fn();
 const mockSaveEntries = jest.fn();
 const mockGetOpenEntry = jest.fn();
+const mockHasEntriesToday = jest.fn();
 const mockRenderTimeEntries = jest.fn();
 const mockInitTimeEntriesView = jest.fn();
 const mockInitHoursView = jest.fn();
 const mockShowTab = jest.fn();
 
 global.createEntry = mockCreateEntry;
+global.createEntryAt = mockCreateEntryAt;
 global.clockOutEntry = mockClockOutEntry;
 global.loadEntries = mockLoadEntries;
 global.saveEntries = mockSaveEntries;
 global.getOpenEntry = mockGetOpenEntry;
+global.hasEntriesToday = mockHasEntriesToday;
 global.renderTimeEntries = mockRenderTimeEntries;
 global.initTimeEntriesView = mockInitTimeEntriesView;
 global.initHoursView = mockInitHoursView;
@@ -96,16 +104,84 @@ describe("handleUrlParams", () => {
       expect(mockRenderTimeEntries).toHaveBeenCalledTimes(1);
     });
 
-    it("does nothing when not clocked in", () => {
+    it("does nothing when not clocked in and it is before 7 AM with no entries today", () => {
       const entries = [];
       mockLoadEntries.mockReturnValue(entries);
-      mockGetOpenEntry.mockReturnValue(null); // not clocked in
+      mockGetOpenEntry.mockReturnValue(null);
+      mockHasEntriesToday.mockReturnValue(false);
+
+      // Simulate before 7 AM
+      const fakeBefore7 = new Date();
+      fakeBefore7.setHours(6, 0, 0, 0);
+      jest.useFakeTimers().setSystemTime(fakeBefore7);
 
       handleUrlParams("?clock-out=true");
 
       expect(mockClockOutEntry).not.toHaveBeenCalled();
       expect(mockSaveEntries).not.toHaveBeenCalled();
       expect(mockRenderTimeEntries).not.toHaveBeenCalled();
+
+      jest.useRealTimers();
+    });
+
+    it("does nothing when not clocked in and there are already entries today", () => {
+      const entries = [{ id: "1", clockIn: new Date().toISOString(), clockOut: "2026-02-27T15:00:00.000Z" }];
+      mockLoadEntries.mockReturnValue(entries);
+      mockGetOpenEntry.mockReturnValue(null);
+      mockHasEntriesToday.mockReturnValue(true);
+
+      // Simulate after 7 AM
+      const fakeAfter7 = new Date();
+      fakeAfter7.setHours(15, 0, 0, 0);
+      jest.useFakeTimers().setSystemTime(fakeAfter7);
+
+      handleUrlParams("?clock-out=true");
+
+      expect(mockClockOutEntry).not.toHaveBeenCalled();
+      expect(mockSaveEntries).not.toHaveBeenCalled();
+      expect(mockRenderTimeEntries).not.toHaveBeenCalled();
+
+      jest.useRealTimers();
+    });
+
+    it("auto creates a 7 AM clock-in and clocks out when not clocked in, after 7 AM, no entries today", () => {
+      const entries = [];
+      mockLoadEntries.mockReturnValue(entries);
+      mockGetOpenEntry.mockReturnValue(null);
+      mockHasEntriesToday.mockReturnValue(false);
+
+      // Simulate 3 PM
+      const fakeTime = new Date(2026, 1, 27, 15, 0, 0, 0); // Feb 27 2026, 15:00 local
+      jest.useFakeTimers().setSystemTime(fakeTime);
+
+      handleUrlParams("?clock-out=true");
+
+      const expectedSevenAm = new Date(2026, 1, 27, 7, 0, 0, 0).toISOString();
+      expect(mockCreateEntryAt).toHaveBeenCalledWith(expectedSevenAm);
+      expect(mockClockOutEntry).toHaveBeenCalledTimes(1);
+      expect(mockSaveEntries).toHaveBeenCalledTimes(1);
+      expect(mockRenderTimeEntries).toHaveBeenCalledTimes(1);
+
+      jest.useRealTimers();
+    });
+
+    it("does nothing when not clocked in", () => {
+      const entries = [];
+      mockLoadEntries.mockReturnValue(entries);
+      mockGetOpenEntry.mockReturnValue(null);
+      mockHasEntriesToday.mockReturnValue(false);
+
+      // Before 7 AM
+      const fakeBefore7 = new Date(2026, 1, 27, 6, 0, 0, 0);
+      jest.useFakeTimers().setSystemTime(fakeBefore7);
+
+      handleUrlParams("?clock-out=true");
+
+      expect(mockClockOutEntry).not.toHaveBeenCalled();
+      expect(mockSaveEntries).not.toHaveBeenCalled();
+      expect(mockRenderTimeEntries).not.toHaveBeenCalled();
+
+      jest.useRealTimers();
     });
   });
 
